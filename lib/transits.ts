@@ -20,25 +20,14 @@ export const ASPECT_INTERPRETATIONS: Record<AspectName, { color: string; text: s
 }
 
 export function aspectAngle(lon1: number, lon2: number): number {
-  let diff = Math.abs(((lon1 - lon2 + 180) % 360) - 180)
-  if (diff > 180) diff = 360 - diff
-  return diff
+  const diff = ((lon1 - lon2) % 360 + 360) % 360
+  return diff > 180 ? 360 - diff : diff
 }
 
 export function isAspect(lon1: number, lon2: number, defaultOrb?: number): AspectName | null {
-  // When called with two longitudes (no orb), compute the angular difference first
-  // When called with (diff, aspectAngle, orb), match directly
-  if (defaultOrb !== undefined) {
-    // Test mode: lon1 is the actual angular diff, lon2 is ignored, defaultOrb is the orb
-    // Find which aspect angle lon1 is closest to within defaultOrb
-    for (const { name, angle } of ASPECT_ANGLES) {
-      if (Math.abs(lon1 - angle) <= defaultOrb) return name
-    }
-    return null
-  }
   const diff = aspectAngle(lon1, lon2)
   for (const { name, angle, orb } of ASPECT_ANGLES) {
-    if (Math.abs(diff - angle) <= orb) return name
+    if (Math.abs(diff - angle) <= (defaultOrb ?? orb)) return name
   }
   return null
 }

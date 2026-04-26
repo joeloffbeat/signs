@@ -10,8 +10,8 @@ describe('aspectAngle', () => {
 
 describe('isAspect', () => {
   it('conjunction within orb', () => expect(isAspect(0, 0, 8)).toBe('conjunction'))
-  it('square within orb', () => expect(isAspect(89, 90, 6)).toBe('square'))
-  it('trine within orb', () => expect(isAspect(122, 120, 7)).toBe('trine'))
+  it('square within orb', () => expect(isAspect(0, 89, 6)).toBe('square'))
+  it('trine within orb', () => expect(isAspect(0, 122, 7)).toBe('trine'))
   it('no aspect outside orb', () => expect(isAspect(50, 60, 5)).toBeNull())
 })
 
