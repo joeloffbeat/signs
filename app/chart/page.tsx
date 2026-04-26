@@ -1,5 +1,7 @@
 'use client'
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { supabaseBrowser } from '@/lib/supabase'
 import TopNav from '@/components/TopNav'
 import ChartWheel from '@/components/ChartWheel'
 import { makeChart } from '@/lib/astro-data'
@@ -15,7 +17,9 @@ interface FormState {
 }
 
 export default function ChartPage() {
+  const { data: session } = useSession()
   const [mode, setMode] = useState<Mode>('input')
+  const [saved, setSaved] = useState(false)
   const [form, setForm] = useState<FormState>({
     name: '',
     date: '1990-06-15',
@@ -24,12 +28,22 @@ export default function ChartPage() {
   })
   const [chart, setChart] = useState<Chart | null>(null)
 
+  async function saveChart() {
+    if (!session?.user?.id || !chart) return
+    await supabaseBrowser.from('readings').insert({
+      user_id: session.user.id,
+      type: 'chart',
+      data: { name: chart.name, dateStr: chart.dateStr, sun: chart.sun.name, moon: chart.moon.name, ascendant: chart.ascendant.name },
+    })
+    setSaved(true)
+  }
+
   const submit = () => {
     if (!form.name || !form.date) return
-    const c = makeChart(form.name, form.date, form.time, form.place || 'unknown')
-    setChart(c)
+    const newChart = makeChart(form.name, form.date, form.time, form.place || 'unknown')
+    setChart(newChart)
     if (typeof window !== 'undefined') {
-      localStorage.setItem('signs-chart', JSON.stringify({ name: form.name, date: form.date, time: form.time, place: form.place }))
+      localStorage.setItem('signs-chart', JSON.stringify(newChart))
     }
     setMode('loading')
     setTimeout(() => setMode('view'), 1100)
@@ -119,6 +133,17 @@ export default function ChartPage() {
           </div>
           <button className="btn btn-ghost btn-sm" onClick={() => setMode('input')}>edit data</button>
         </div>
+
+        {session && (
+          <button
+            className={`btn ${saved ? 'btn-ghost' : 'btn-primary'}`}
+            onClick={saveChart}
+            disabled={saved}
+            style={{ marginTop: 24 }}
+          >
+            {saved ? 'saved ✓' : 'save this reading →'}
+          </button>
+        )}
 
         <div className="chart-grid">
           <div className="chart-wheel-wrap">

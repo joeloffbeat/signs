@@ -1,5 +1,7 @@
 'use client'
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { supabaseBrowser } from '@/lib/supabase'
 import TopNav from '@/components/TopNav'
 import TarotArt from '@/components/TarotArt'
 import { TAROT_DECK } from '@/lib/tarot-data'
@@ -8,10 +10,22 @@ import type { TarotCard } from '@/lib/tarot-data'
 type DrawnCard = TarotCard & { isReversed: boolean }
 
 export default function TarotPage() {
+  const { data: session } = useSession()
   const [phase, setPhase] = useState<'intro' | 'shuffle' | 'fan' | 'reveal'>('intro')
   const [drawn, setDrawn] = useState<DrawnCard[]>([])
   const [flipped, setFlipped] = useState([false, false, false])
   const [question, setQuestion] = useState('')
+  const [saved, setSaved] = useState(false)
+
+  async function saveReading() {
+    if (!session?.user?.id) return
+    await supabaseBrowser.from('readings').insert({
+      user_id: session.user.id,
+      type: 'tarot',
+      data: { cards: drawn.map((c) => ({ id: c.id, name: c.name, reversed: false })) },
+    })
+    setSaved(true)
+  }
 
   const beginShuffle = () => {
     setPhase('shuffle')
@@ -155,7 +169,16 @@ export default function TarotPage() {
 
                 <div className="btn-row" style={{ marginTop: 24, justifyContent: 'center' }}>
                   <button className="btn btn-ghost" onClick={reset}>shuffle again</button>
-                  <button className="btn">save this reading</button>
+                  {session && drawn.length === 3 && (
+                    <button
+                      className={`btn ${saved ? 'btn-ghost' : 'btn-primary'}`}
+                      onClick={saveReading}
+                      disabled={saved}
+                      style={{ marginTop: 24 }}
+                    >
+                      {saved ? 'saved ✓' : 'save this reading →'}
+                    </button>
+                  )}
                   <button className="btn btn-secondary">share</button>
                 </div>
               </>
