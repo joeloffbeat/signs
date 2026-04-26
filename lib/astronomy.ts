@@ -15,7 +15,7 @@ export interface SunTimes {
 export function getMoonPhase(date: Date): MoonPhaseResult {
   const degrees = Astronomy.MoonPhase(date)
   const illumination = Math.round(
-    (1 - Math.abs(Math.cos((degrees * Math.PI) / 180))) * 100
+    ((1 - Math.cos((degrees * Math.PI) / 180)) / 2) * 100
   )
 
   let phaseName: string
