@@ -1,0 +1,80 @@
+<h2>Signs — Updated Architecture ✓</h2>
+<p class="subtitle">Simplified: moon icon → /dashboard. /moon and /hours removed.</p>
+
+<style>
+.arch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+.arch-section { background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 18px; }
+.arch-section h3 { margin: 0 0 12px; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.55; }
+.route-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.route-item { display: flex; align-items: flex-start; gap: 10px; }
+.route-path { font-family: monospace; font-size: 0.76rem; background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 4px; white-space: nowrap; min-width: 140px; }
+.route-desc { font-size: 0.8rem; opacity: 0.75; line-height: 1.4; }
+.badge { font-size: 0.62rem; font-family: monospace; padding: 2px 6px; border-radius: 3px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.badge-new { background: rgba(167,139,250,0.25); color: #c4b5fd; border: 1px solid rgba(167,139,250,0.4); }
+.badge-existing { background: rgba(100,100,100,0.2); color: rgba(255,255,255,0.45); border: 1px solid rgba(255,255,255,0.15); }
+.badge-removed { background: rgba(200,60,60,0.15); color: rgba(255,150,150,0.8); border: 1px solid rgba(200,60,60,0.3); text-decoration: line-through; }
+.badge-vercel { background: rgba(0,0,0,0.4); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+.full-width { grid-column: 1 / -1; }
+.highlight-row { border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.05); }
+.flow-diagram { background: rgba(0,0,0,0.25); border-radius: 8px; padding: 14px; font-family: monospace; font-size: 0.72rem; line-height: 1.9; color: rgba(255,255,255,0.72); }
+.removed { opacity: 0.35; }
+.check { color: #86efac; }
+</style>
+
+<div class="arch-grid">
+
+  <div class="arch-section">
+    <h3>All routes (final)</h3>
+    <ul class="route-list">
+      <li class="route-item"><span class="route-path">/</span><span class="route-desc">Home <span class="badge badge-existing">exists</span></span></li>
+      <li class="route-item"><span class="route-path">/today</span><span class="route-desc">Daily vibe <span class="badge badge-existing">exists</span></span></li>
+      <li class="route-item"><span class="route-path">/tarot</span><span class="route-desc">3-card pull <span class="badge badge-existing">exists</span></span></li>
+      <li class="route-item"><span class="route-path">/chart</span><span class="route-desc">Birth chart wheel <span class="badge badge-existing">exists</span></span></li>
+      <li class="route-item"><span class="route-path">/compat</span><span class="route-desc">Compatibility <span class="badge badge-existing">exists</span></span></li>
+      <li class="route-item"><span class="route-path">/dashboard</span><span class="route-desc">🌙 Moon phase + planetary hours combined <span class="badge badge-new">new</span></span></li>
+      <li class="route-item"><span class="route-path">/transits</span><span class="route-desc">Personal transit calendar <span class="badge badge-new">new</span></span></li>
+      <li class="route-item"><span class="route-path">/numerology</span><span class="route-desc">Life path, expression, soul urge <span class="badge badge-new">new</span></span></li>
+      <li class="route-item"><span class="route-path">/solar-return</span><span class="route-desc">Annual solar return chart <span class="badge badge-new">new</span></span></li>
+      <li class="route-item"><span class="route-path">/map</span><span class="route-desc">Astrocartography world map <span class="badge badge-new">new</span></span></li>
+      <li class="route-item"><span class="route-path">/readings</span><span class="route-desc">Saved past readings (auth-gated) <span class="badge badge-new">new</span></span></li>
+      <li class="route-item"><span class="route-path">/login</span><span class="route-desc">Google + email/password auth <span class="badge badge-new">new</span></span></li>
+      <li class="route-item removed"><span class="route-path">/moon</span><span class="route-desc"><span class="badge badge-removed">removed</span></span></li>
+      <li class="route-item removed"><span class="route-path">/hours</span><span class="route-desc"><span class="badge badge-removed">removed</span></span></li>
+    </ul>
+  </div>
+
+  <div class="arch-section">
+    <h3>Tech stack (final)</h3>
+    <ul class="route-list">
+      <li class="route-item"><span class="route-path">Next.js 14</span><span class="route-desc">App Router, TypeScript</span></li>
+      <li class="route-item"><span class="route-path">NextAuth v5</span><span class="route-desc">Google OAuth + credentials</span></li>
+      <li class="route-item"><span class="route-path">Supabase</span><span class="route-desc">Postgres — users, readings, charts</span></li>
+      <li class="route-item"><span class="route-path">Joel CSS</span><span class="route-desc">Exact design system from prototype</span></li>
+      <li class="route-item"><span class="route-path">Leaflet.js</span><span class="route-desc">Astrocartography map</span></li>
+      <li class="route-item"><span class="route-path">astronomy-engine</span><span class="route-desc">Real planet/moon positions</span></li>
+      <li class="route-item"><span class="route-path">@vercel/analytics</span><span class="route-desc"><span class="badge badge-vercel">▲ vercel</span> injected in root layout</span></li>
+      <li class="route-item"><span class="route-path">@vercel/speed-insights</span><span class="route-desc"><span class="badge badge-vercel">▲ vercel</span> performance monitoring</span></li>
+    </ul>
+  </div>
+
+  <div class="arch-section full-width highlight-row">
+    <h3>Moon icon → /dashboard behaviour</h3>
+    <div class="flow-diagram">
+Top nav (right side):
+  🌙 waxing gibbous  ·  Apr 25  →  clicking 🌙 navigates to /dashboard
+
+/dashboard layout:
+  ┌─────────────────────────────────┬───────────────────────────┐
+  │  MOON PHASE                      │  PLANETARY HOURS           │
+  │  Current: Waxing Gibbous 72%     │  Current hour: ☉ Sun       │
+  │  [visual moon illustration]      │  Hour sequence today        │
+  │  Monthly phase calendar          │  History: what it means     │
+  │  Effect on each sign             │  Next 6 hours               │
+  └─────────────────────────────────┴───────────────────────────┘
+    </div>
+    <div style="margin-top:10px;font-size:0.78rem;opacity:0.6;">Both sections use real astronomy-engine data. Planetary hour calculation is deterministic from lat/lon + sunrise/sunset times.</div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:20px;text-align:center;color:#86efac;">✓ Architecture locked. Writing the spec now...</p>

@@ -91,6 +91,14 @@ export default function TopNav({ moonPhase = 'waxing gibbous', moonGlyph = '🌙
                 >
                   my readings
                 </Link>
+                <Link
+                  href="/profile"
+                  className="nav-link"
+                  style={{ display: 'block', padding: '6px 16px' }}
+                  onClick={() => setAvatarOpen(false)}
+                >
+                  edit profile
+                </Link>
                 <button
                   className="nav-link"
                   style={{ display: 'block', width: '100%', textAlign: 'left', padding: '6px 16px', background: 'none', border: 'none', cursor: 'pointer' }}

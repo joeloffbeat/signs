@@ -1,5 +1,6 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import TopNav from '@/components/TopNav'
 import { computeNumerology, type NumerologyResult } from '@/lib/numerology'
 
@@ -22,9 +23,18 @@ const LABELS = ['life path', 'expression', 'soul urge', 'personal year']
 const KEYS: (keyof NumerologyResult)[] = ['lifePath', 'expression', 'soulUrge', 'personalYear']
 
 export default function NumerologyPage() {
+  const { data: session } = useSession()
   const [name, setName] = useState('')
   const [birthDate, setBirthDate] = useState('')
   const [result, setResult] = useState<NumerologyResult | null>(null)
+  const [profile, setProfile] = useState<{ name: string; birth_date: string } | null>(null)
+
+  useEffect(() => {
+    if (!session) return
+    fetch('/api/profile').then(r => r.json()).then(d => {
+      if (d?.birth_date) setProfile({ name: d.name ?? '', birth_date: d.birth_date })
+    })
+  }, [session])
 
   function calculate(e: React.FormEvent) {
     e.preventDefault()
@@ -49,8 +59,14 @@ export default function NumerologyPage() {
             <label className="field-label">birth date</label>
             <input className="input" type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required />
           </div>
-          <div className="field" style={{ flex: '0 0 auto', display: 'flex', alignItems: 'flex-end' }}>
+          <div className="field" style={{ flex: '0 0 auto', display: 'flex', alignItems: 'flex-end', gap: 8 }}>
             <button className="btn btn-primary" type="submit">calculate →</button>
+            {profile && (
+              <button type="button" className="btn btn-ghost"
+                onClick={() => { setName(profile.name); setBirthDate(profile.birth_date) }}>
+                use my data
+              </button>
+            )}
           </div>
         </form>
 

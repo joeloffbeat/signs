@@ -1,0 +1,111 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<title>signs — tarot, charts, daily vibes</title>
+<link rel="stylesheet" href="design/colors_and_type.css">
+<link rel="stylesheet" href="design/components.css">
+<link rel="stylesheet" href="design/signs.css">
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<style>
+@keyframes cardDeal {
+  0% { opacity: 0; transform: translateY(40px) rotate(-8deg) scale(0.9); }
+  100% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+}
+@keyframes wheelIn {
+  0% { opacity: 0; transform: scale(0.6); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.tarot-card .face,
+.tarot-card .back { display: flex; }
+</style>
+</head>
+<body class="has-grain">
+<div id="root"></div>
+
+<!-- data -->
+<script src="design/tarot-data.js"></script>
+<script src="design/astro-data.js"></script>
+
+<!-- components (babel) -->
+<script type="text/babel" src="design/tarot-art.jsx"></script>
+<script type="text/babel" src="design/chart-wheel.jsx"></script>
+<script type="text/babel" src="design/screens-1.jsx"></script>
+<script type="text/babel" src="design/screens-2.jsx"></script>
+<script type="text/babel" src="design/screens-3.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "deckStyle": "woodcut",
+  "wheelStyle": "renaissance"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [route, setRoute] = useState("home");
+  const [chart, setChart] = useState(() => makeChart("joel", "1991-09-12", "07:42", "edinburgh, uk"));
+  const [tweaks, setTweaks] = useTweaks(TWEAK_DEFAULTS);
+
+  // ink-splatter cursor trail (only on home/marketing pages)
+  useEffect(() => {
+    if (route !== "home") return;
+    let last = 0;
+    const onMove = (e) => {
+      const now = Date.now();
+      if (now - last < 90) return;
+      last = now;
+      const dot = document.createElement("div");
+      dot.className = "cursor-ink";
+      dot.style.left = (e.clientX - 3) + "px";
+      dot.style.top = (e.clientY - 3) + "px";
+      document.body.appendChild(dot);
+      setTimeout(() => dot.remove(), 700);
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, [route]);
+
+  return (
+    <>
+      <TopNav route={route} onNav={setRoute} />
+      {route === "home"   && <HomeScreen   onNav={setRoute} deckStyle={tweaks.deckStyle} />}
+      {route === "today"  && <TodayScreen  chart={chart} />}
+      {route === "tarot"  && <TarotScreen  deckStyle={tweaks.deckStyle} />}
+      {route === "chart"  && <ChartScreen  chart={chart} setChart={setChart} wheelStyle={tweaks.wheelStyle} />}
+      {route === "compat" && <CompatScreen chart={chart} />}
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="Tarot deck art">
+          <TweakRadio
+            value={tweaks.deckStyle}
+            onChange={(v) => setTweaks({ deckStyle: v })}
+            options={[
+              { value: "woodcut", label: "Woodcut (renaissance)" },
+              { value: "minimal", label: "Minimal line" },
+              { value: "glyph",   label: "Inverted glyph (bold)" },
+            ]}
+          />
+        </TweakSection>
+        <TweakSection title="Chart wheel style">
+          <TweakRadio
+            value={tweaks.wheelStyle}
+            onChange={(v) => setTweaks({ wheelStyle: v })}
+            options={[
+              { value: "renaissance", label: "Renaissance (decorative ring)" },
+              { value: "minimal",     label: "Minimal (clean lines)" },
+            ]}
+          />
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body></html>

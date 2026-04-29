@@ -1,5 +1,6 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import TopNav from '@/components/TopNav'
 import { makeChart, makeCompat } from '@/lib/astro-data'
 import type { Chart, Compat } from '@/lib/astro-data'
@@ -23,6 +24,7 @@ function savedChart(): FormState | null {
 }
 
 export default function CompatPage() {
+  const { data: session } = useSession()
   const prefill = savedChart()
   const [myForm, setMyForm] = useState<FormState>(prefill ?? emptyForm())
   const [myChart, setMyChart] = useState<Chart | null>(
@@ -30,6 +32,15 @@ export default function CompatPage() {
   )
   const [partner, setPartner] = useState<Chart | null>(null)
   const [partnerForm, setPartnerForm] = useState<FormState>(emptyForm())
+  const [profile, setProfile] = useState<FormState | null>(null)
+  const [compatSaved, setCompatSaved] = useState(false)
+
+  useEffect(() => {
+    if (!session) return
+    fetch('/api/profile').then(r => r.json()).then(d => {
+      if (d?.birth_date) setProfile({ name: d.name ?? '', date: d.birth_date, time: d.birth_time ?? '12:00', place: d.birth_place ?? '' })
+    })
+  }, [session])
 
   if (!myChart) {
     return (
@@ -65,6 +76,11 @@ export default function CompatPage() {
                 onClick={() => setMyChart(makeChart(myForm.name, myForm.date, myForm.time, myForm.place || 'unknown'))}>
                 next: add them →
               </button>
+              {profile && (
+                <button className="btn btn-ghost" onClick={() => setMyForm(profile)}>
+                  use my birth data →
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -116,6 +132,23 @@ export default function CompatPage() {
 
   const compat: Compat = makeCompat(myChart, partner)
 
+  async function saveCompat() {
+    if (!session || !myChart || !partner) return
+    await fetch('/api/readings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'compat',
+        data: {
+          person1: { name: myChart.name, sun: myChart.sun.name, moon: myChart.moon.name, ascendant: myChart.ascendant.name },
+          person2: { name: partner.name, sun: partner.sun.name, moon: partner.moon.name, ascendant: partner.ascendant.name },
+          overall: compat.overall,
+        },
+      }),
+    })
+    setCompatSaved(true)
+  }
+
   return (
     <>
       <TopNav />
@@ -126,7 +159,14 @@ export default function CompatPage() {
             <h1>{myChart.name.toLowerCase()} & {partner.name.toLowerCase()}.</h1>
             <p>{compat.summary} take the number with salt. the bars below say more.</p>
           </div>
-          <button className="btn btn-ghost btn-sm" onClick={() => setPartner(null)}>change partner</button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {session && (
+              <button className="btn btn-ghost btn-sm" onClick={saveCompat} disabled={compatSaved}>
+                {compatSaved ? 'saved ✓' : 'save reading'}
+              </button>
+            )}
+            <button className="btn btn-ghost btn-sm" onClick={() => setPartner(null)}>change partner</button>
+          </div>
         </div>
 
         <div className="compat-grid">

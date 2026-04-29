@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { supabaseBrowser } from '@/lib/supabase'
 import TopNav from '@/components/TopNav'
 import TarotArt from '@/components/TarotArt'
 import { TAROT_DECK } from '@/lib/tarot-data'
@@ -18,11 +17,14 @@ export default function TarotPage() {
   const [saved, setSaved] = useState(false)
 
   async function saveReading() {
-    if (!session?.user?.id) return
-    await supabaseBrowser.from('readings').insert({
-      user_id: session.user.id,
-      type: 'tarot',
-      data: { cards: drawn.map((c) => ({ id: c.id, name: c.name, reversed: false })) },
+    if (!session) return
+    await fetch('/api/readings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'tarot',
+        data: { cards: drawn.map((c) => ({ id: c.id, name: c.name, reversed: c.isReversed })) },
+      }),
     })
     setSaved(true)
   }

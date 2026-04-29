@@ -1,7 +1,6 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { supabaseBrowser } from '@/lib/supabase'
 import TopNav from '@/components/TopNav'
 import ChartWheel from '@/components/ChartWheel'
 import { makeChart } from '@/lib/astro-data'
@@ -27,13 +26,24 @@ export default function ChartPage() {
     place: '',
   })
   const [chart, setChart] = useState<Chart | null>(null)
+  const [profile, setProfile] = useState<FormState | null>(null)
+
+  useEffect(() => {
+    if (!session) return
+    fetch('/api/profile').then(r => r.json()).then(d => {
+      if (d?.birth_date) setProfile({ name: d.name ?? '', date: d.birth_date, time: d.birth_time ?? '12:00', place: d.birth_place ?? '' })
+    })
+  }, [session])
 
   async function saveChart() {
-    if (!session?.user?.id || !chart) return
-    await supabaseBrowser.from('readings').insert({
-      user_id: session.user.id,
-      type: 'chart',
-      data: { name: chart.name, dateStr: chart.dateStr, sun: chart.sun.name, moon: chart.moon.name, ascendant: chart.ascendant.name },
+    if (!session || !chart) return
+    await fetch('/api/readings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'chart',
+        data: { name: chart.name, dateStr: chart.dateStr, sun: chart.sun.name, moon: chart.moon.name, ascendant: chart.ascendant.name },
+      }),
     })
     setSaved(true)
   }
@@ -90,6 +100,11 @@ export default function ChartPage() {
               <button className="btn btn-primary btn-lg" onClick={submit} disabled={!form.name || !form.date}>
                 draw the chart →
               </button>
+              {profile && (
+                <button className="btn btn-ghost" onClick={() => setForm(profile)}>
+                  use my birth data →
+                </button>
+              )}
               <button className="btn btn-ghost" onClick={() => setForm({ name: 'sample', date: '1990-06-21', time: '12:00', place: 'london, uk' })}>
                 use sample data
               </button>
