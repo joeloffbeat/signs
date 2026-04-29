@@ -8,13 +8,22 @@ interface Profile {
   name: string
   birth_date: string
   birth_time: string
-  birth_place: string
+  birth_tz: string
 }
+
+const TZ_OPTIONS = [
+  'UTC-12', 'UTC-11', 'UTC-10', 'UTC-09:30', 'UTC-09', 'UTC-08', 'UTC-07',
+  'UTC-06', 'UTC-05', 'UTC-04', 'UTC-03:30', 'UTC-03', 'UTC-02', 'UTC-01',
+  'UTC+00', 'UTC+01', 'UTC+02', 'UTC+03', 'UTC+03:30', 'UTC+04', 'UTC+04:30',
+  'UTC+05', 'UTC+05:30', 'UTC+05:45', 'UTC+06', 'UTC+06:30', 'UTC+07',
+  'UTC+08', 'UTC+08:45', 'UTC+09', 'UTC+09:30', 'UTC+10', 'UTC+10:30',
+  'UTC+11', 'UTC+12', 'UTC+12:45', 'UTC+13', 'UTC+14',
+]
 
 export default function ProfilePage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [form, setForm] = useState<Profile>({ name: '', birth_date: '', birth_time: '', birth_place: '' })
+  const [form, setForm] = useState<Profile>({ name: '', birth_date: '', birth_time: '', birth_tz: 'UTC+00' })
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -28,7 +37,7 @@ export default function ProfilePage() {
           name: data.name ?? session?.user?.name ?? '',
           birth_date: data.birth_date ?? '',
           birth_time: data.birth_time ?? '',
-          birth_place: data.birth_place ?? '',
+          birth_tz: data.birth_tz ?? 'UTC+00',
         })
         setLoading(false)
       })
@@ -77,10 +86,12 @@ export default function ProfilePage() {
                 <div className="field-help">leave blank if unknown</div>
               </div>
               <div className="full">
-                <label className="field-label">birth place</label>
-                <input className="input" value={form.birth_place}
-                  onChange={e => setForm({ ...form, birth_place: e.target.value })}
-                  placeholder="city, country" />
+                <label className="field-label">birth timezone</label>
+                <select className="input" value={form.birth_tz}
+                  onChange={e => setForm({ ...form, birth_tz: e.target.value })}>
+                  {TZ_OPTIONS.map(tz => <option key={tz} value={tz}>{tz}</option>)}
+                </select>
+                <div className="field-help">the local timezone at your place of birth.</div>
               </div>
             </div>
             <div className="btn-row" style={{ marginTop: 28 }}>

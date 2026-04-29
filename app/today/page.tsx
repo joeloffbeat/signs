@@ -30,7 +30,7 @@ export default function TodayPage() {
     if (session) {
       fetch('/api/profile').then(r => r.json()).then(d => {
         if (d?.birth_date && !localStorage.getItem('signs-chart')) {
-          setPersonalChart(makeChart(d.name ?? 'me', d.birth_date, d.birth_time ?? '12:00', d.birth_place ?? 'unknown'))
+          setPersonalChart(makeChart(d.name ?? 'me', d.birth_date, d.birth_time ?? '12:00', 'unknown'))
           setUsePersonal(true)
         }
       })

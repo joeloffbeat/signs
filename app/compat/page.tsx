@@ -9,16 +9,15 @@ interface FormState {
   name: string
   date: string
   time: string
-  place: string
 }
 
-const emptyForm = (): FormState => ({ name: '', date: '1990-06-15', time: '12:00', place: '' })
+const emptyForm = (): FormState => ({ name: '', date: '1990-06-15', time: '12:00' })
 
 function savedChart(): FormState | null {
   if (typeof window === 'undefined') return null
   try {
     const d = JSON.parse(localStorage.getItem('signs-chart') ?? '')
-    if (d?.name && d?.date) return d as FormState
+    if (d?.name && d?.date) return { name: d.name, date: d.date, time: d.time ?? '12:00' }
   } catch { /* no saved chart */ }
   return null
 }
@@ -28,7 +27,7 @@ export default function CompatPage() {
   const prefill = savedChart()
   const [myForm, setMyForm] = useState<FormState>(prefill ?? emptyForm())
   const [myChart, setMyChart] = useState<Chart | null>(
-    prefill ? makeChart(prefill.name, prefill.date, prefill.time, prefill.place || 'unknown') : null
+    prefill ? makeChart(prefill.name, prefill.date, prefill.time, 'unknown') : null
   )
   const [partner, setPartner] = useState<Chart | null>(null)
   const [partnerForm, setPartnerForm] = useState<FormState>(emptyForm())
@@ -38,7 +37,7 @@ export default function CompatPage() {
   useEffect(() => {
     if (!session) return
     fetch('/api/profile').then(r => r.json()).then(d => {
-      if (d?.birth_date) setProfile({ name: d.name ?? '', date: d.birth_date, time: d.birth_time ?? '12:00', place: d.birth_place ?? '' })
+      if (d?.birth_date) setProfile({ name: d.name ?? '', date: d.birth_date, time: d.birth_time ?? '12:00' })
     })
   }, [session])
 
@@ -66,14 +65,10 @@ export default function CompatPage() {
                 <label className="field-label">birth time</label>
                 <input className="input" type="time" value={myForm.time} onChange={e => setMyForm({ ...myForm, time: e.target.value })} />
               </div>
-              <div className="full">
-                <label className="field-label">birth place</label>
-                <input className="input" value={myForm.place} onChange={e => setMyForm({ ...myForm, place: e.target.value })} placeholder="city, country" />
-              </div>
             </div>
             <div className="btn-row" style={{ marginTop: 28 }}>
               <button className="btn btn-primary btn-lg" disabled={!myForm.name || !myForm.date}
-                onClick={() => setMyChart(makeChart(myForm.name, myForm.date, myForm.time, myForm.place || 'unknown'))}>
+                onClick={() => setMyChart(makeChart(myForm.name, myForm.date, myForm.time, 'unknown'))}>
                 next: add them →
               </button>
               {profile && (
@@ -112,15 +107,11 @@ export default function CompatPage() {
                 <label className="field-label">birth time</label>
                 <input className="input" type="time" value={partnerForm.time} onChange={e => setPartnerForm({ ...partnerForm, time: e.target.value })} />
               </div>
-              <div className="full">
-                <label className="field-label">birth place</label>
-                <input className="input" value={partnerForm.place} onChange={e => setPartnerForm({ ...partnerForm, place: e.target.value })} placeholder="city, country" />
-              </div>
             </div>
             <div className="btn-row" style={{ marginTop: 28 }}>
               <button className="btn btn-ghost btn-sm" onClick={() => setMyChart(null)}>← back</button>
               <button className="btn btn-primary btn-lg" disabled={!partnerForm.name}
-                onClick={() => setPartner(makeChart(partnerForm.name, partnerForm.date, partnerForm.time, partnerForm.place || 'unknown'))}>
+                onClick={() => setPartner(makeChart(partnerForm.name, partnerForm.date, partnerForm.time, 'unknown'))}>
                 run synastry →
               </button>
             </div>

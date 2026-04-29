@@ -15,7 +15,6 @@ interface FormState {
   name: string
   date: string
   time: string
-  place: string
   tz: string
 }
 
@@ -75,7 +74,6 @@ export default function ChartPage() {
     name: '',
     date: '1990-06-15',
     time: '14:30',
-    place: '',
     tz: 'UTC+00',
   })
   const [chart, setChart] = useState<Chart | null>(null)
@@ -84,7 +82,7 @@ export default function ChartPage() {
   useEffect(() => {
     if (!session) return
     fetch('/api/profile').then(r => r.json()).then(d => {
-      if (d?.birth_date) setProfile({ name: d.name ?? '', date: d.birth_date, time: d.birth_time ?? '12:00', place: d.birth_place ?? '', tz: d.birth_tz ?? 'UTC+00' })
+      if (d?.birth_date) setProfile({ name: d.name ?? '', date: d.birth_date, time: d.birth_time ?? '12:00', tz: d.birth_tz ?? 'UTC+00' })
     })
   }, [session])
 
@@ -103,10 +101,10 @@ export default function ChartPage() {
 
   const submit = () => {
     if (!form.name || !form.date) return
-    const newChart = makeChart(form.name, form.date, form.time, form.place || 'unknown')
+    const newChart = makeChart(form.name, form.date, form.time, 'unknown')
     setChart(newChart)
     if (typeof window !== 'undefined') {
-      localStorage.setItem('signs-chart', JSON.stringify({ name: form.name, date: form.date, time: form.time, place: form.place, tz: form.tz }))
+      localStorage.setItem('signs-chart', JSON.stringify({ name: form.name, date: form.date, time: form.time, tz: form.tz }))
     }
     setMode('loading')
     setTimeout(() => setMode('view'), 1100)
@@ -143,12 +141,6 @@ export default function ChartPage() {
                 <div className="field-help">if unknown, pick noon. you'll lose ascendant accuracy.</div>
               </div>
               <div>
-                <label className="field-label">birth place</label>
-                <input className="input" value={form.place}
-                  onChange={e => setForm({ ...form, place: e.target.value })}
-                  placeholder="city, country" />
-              </div>
-              <div>
                 <label className="field-label">timezone</label>
                 <select className="input" value={form.tz} onChange={e => setForm({ ...form, tz: e.target.value })}>
                   {TZ_OPTIONS.map(tz => <option key={tz} value={tz}>{tz}</option>)}
@@ -165,7 +157,7 @@ export default function ChartPage() {
                   use my birth data →
                 </button>
               )}
-              <button className="btn btn-ghost" onClick={() => setForm({ name: 'sample', date: '1990-06-21', time: '12:00', place: 'london, uk', tz: 'UTC+01' })}>
+              <button className="btn btn-ghost" onClick={() => setForm({ name: 'sample', date: '1990-06-21', time: '12:00', tz: 'UTC+01' })}>
                 use sample data
               </button>
             </div>
@@ -208,7 +200,7 @@ export default function ChartPage() {
           <div>
             <div className="eyebrow">natal chart</div>
             <h1>{c.name}'s wheel.</h1>
-            <p>{c.dateStr} · {c.timeStr} · {c.place}{form.tz !== 'UTC+00' ? ` · ${form.tz}` : ''}</p>
+            <p>{c.dateStr} · {c.timeStr} · {form.tz}</p>
           </div>
           <button className="btn btn-ghost btn-sm" onClick={() => setMode('input')}>edit data</button>
         </div>

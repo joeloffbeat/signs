@@ -9,7 +9,7 @@ export async function GET() {
 
   const { data } = await supabaseAdmin
     .from('users')
-    .select('id, name, birth_date, birth_time, birth_place')
+    .select('id, name, birth_date, birth_time, birth_tz')
     .eq('email', session.user.email)
     .single()
 
@@ -20,13 +20,13 @@ export async function PUT(req: NextRequest) {
   const session = await auth()
   if (!session?.user?.email) return NextResponse.json(null, { status: 401 })
 
-  const { name, birth_date, birth_time, birth_place } = await req.json()
+  const { name, birth_date, birth_time, birth_tz } = await req.json()
 
   const { data } = await supabaseAdmin
     .from('users')
-    .update({ name, birth_date, birth_time, birth_place })
+    .update({ name, birth_date, birth_time, birth_tz })
     .eq('email', session.user.email)
-    .select('id, name, birth_date, birth_time, birth_place')
+    .select('id, name, birth_date, birth_time, birth_tz')
     .single()
 
   return NextResponse.json(data)
