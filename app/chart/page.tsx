@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import TopNav from '@/components/TopNav'
 import ChartWheel from '@/components/ChartWheel'
-import SignLoreBox from '@/components/SignLoreBox'
+import Link from 'next/link'
 import { makeChart } from '@/lib/astro-data'
 import type { Chart } from '@/lib/astro-data'
 import { getHouseMeaning } from '@/lib/house-meanings'
@@ -227,19 +227,19 @@ export default function ChartPage() {
                 <div className="lbl">sun</div>
                 <div className="glyph">{c.sun.glyph}</div>
                 <div className="name">{c.sun.name.toLowerCase()}</div>
-                <SignLoreBox signName={c.sun.name} label="sun" glyph={c.sun.glyph} inline />
+                <Link href="/lore" style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', textDecoration: 'none', marginTop: 8, display: 'inline-block' }}>mythology →</Link>
               </div>
               <div className="b" style={{ background: 'var(--paper-2)' }}>
                 <div className="lbl">moon</div>
                 <div className="glyph">{c.moon.glyph}</div>
                 <div className="name">{c.moon.name.toLowerCase()}</div>
-                <SignLoreBox signName={c.moon.name} label="moon" glyph={c.moon.glyph} inline />
+                <Link href="/lore" style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', textDecoration: 'none', marginTop: 8, display: 'inline-block' }}>mythology →</Link>
               </div>
               <div className="b" style={{ background: 'var(--sage-soft)' }}>
                 <div className="lbl">rising</div>
                 <div className="glyph">{c.ascendant.glyph}</div>
                 <div className="name">{c.ascendant.name.toLowerCase()}</div>
-                <SignLoreBox signName={c.ascendant.name} label="rising" glyph={c.ascendant.glyph} inline />
+                <Link href="/lore" style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', textDecoration: 'none', marginTop: 8, display: 'inline-block' }}>mythology →</Link>
               </div>
             </div>
 
