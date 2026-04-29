@@ -1,10 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import TopNav from '@/components/TopNav'
 import { makeChart, makeDailyVibe } from '@/lib/astro-data'
 import type { Chart, DailyVibe } from '@/lib/astro-data'
 
 export default function TodayPage() {
+  const { data: session } = useSession()
   const [loading, setLoading] = useState(true)
   const [chart] = useState<Chart>(() => makeChart('visitor', '1990-01-01', '12:00', 'New York'))
 
@@ -41,7 +43,7 @@ export default function TodayPage() {
         <div className="page-head">
           <div className="eyebrow">today's read</div>
           <h1>{dateLabel}.</h1>
-          <p>your daily vibe, calculated from {chart.name.toLowerCase()}'s natal positions and today's transits. one paragraph, two numbers, no horoscope filler.</p>
+          <p>your daily vibe, calculated from today's transits and planetary positions. one paragraph, two numbers, no horoscope filler.</p>
         </div>
 
         <div className="today-grid">
@@ -115,18 +117,30 @@ export default function TodayPage() {
               ))}
             </div>
 
-            <div className="side-card" style={{ background: 'var(--ink)', color: 'var(--bone)', borderColor: 'var(--ink)' }}>
-              <h4 style={{ color: 'var(--bone)' }}>your sun</h4>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ fontFamily: 'Roboto Slab', fontWeight: 900, fontSize: 56, lineHeight: 1 }}>{chart.sun.glyph}</div>
-                <div>
-                  <div style={{ fontFamily: 'Roboto Slab', fontWeight: 800, fontSize: 22 }}>{chart.sun.name}</div>
-                  <div style={{ fontFamily: 'JetBrains Mono', fontSize: 12, color: 'var(--paper-2)', marginTop: 2 }}>
-                    {chart.sun.element} · {chart.sun.mode} · ruled by {chart.sun.ruler}
+            {session ? (
+              <div className="side-card" style={{ background: 'var(--ink)', color: 'var(--bone)', borderColor: 'var(--ink)' }}>
+                <h4 style={{ color: 'var(--bone)' }}>your sun</h4>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ fontFamily: 'Roboto Slab', fontWeight: 900, fontSize: 56, lineHeight: 1 }}>{chart.sun.glyph}</div>
+                  <div>
+                    <div style={{ fontFamily: 'Roboto Slab', fontWeight: 800, fontSize: 22 }}>{chart.sun.name}</div>
+                    <div style={{ fontFamily: 'JetBrains Mono', fontSize: 12, color: 'var(--paper-2)', marginTop: 2 }}>
+                      {chart.sun.element} · {chart.sun.mode} · ruled by {chart.sun.ruler}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="side-card" style={{ background: 'var(--ink)', color: 'var(--bone)', borderColor: 'var(--ink)' }}>
+                <h4 style={{ color: 'var(--bone)' }}>your natal chart</h4>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--paper-2)', marginBottom: 12 }}>
+                  sign in to see your sun, moon, and rising personalised to your birth data.
+                </p>
+                <a href="/login" style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--honey)', textDecoration: 'none' }}>
+                  sign in →
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>

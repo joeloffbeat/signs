@@ -10,13 +10,10 @@ const PRIMARY_LINKS = [
   { href: '/tarot', label: 'tarot' },
   { href: '/chart', label: 'birth chart' },
   { href: '/compat', label: 'compatibility' },
-]
-
-const MORE_LINKS = [
   { href: '/transits', label: 'transits' },
   { href: '/numerology', label: 'numerology' },
   { href: '/solar-return', label: 'solar return' },
-  { href: '/map', label: 'astrocartography' },
+  { href: '/map', label: 'map' },
 ]
 
 interface TopNavProps {
@@ -27,7 +24,6 @@ interface TopNavProps {
 export default function TopNav({ moonPhase = 'waxing gibbous', moonGlyph = '🌙' }: TopNavProps) {
   const pathname = usePathname()
   const { data: session } = useSession()
-  const [moreOpen, setMoreOpen] = useState(false)
   const [avatarOpen, setAvatarOpen] = useState(false)
   const today = new Date().toLocaleDateString('en', { month: 'short', day: 'numeric' })
 
@@ -52,36 +48,6 @@ export default function TopNav({ moonPhase = 'waxing gibbous', moonGlyph = '🌙
             {l.label}
           </Link>
         ))}
-
-        <div style={{ position: 'relative' }}>
-          <button
-            className="nav-link"
-            style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-            onClick={() => setMoreOpen((o) => !o)}
-          >
-            ···
-          </button>
-          {moreOpen && (
-            <div style={{
-              position: 'absolute', top: '100%', left: 0,
-              background: 'var(--bg-paper)', border: '2px solid var(--ink)',
-              padding: '8px 0', zIndex: 50, minWidth: 160,
-              boxShadow: '3px 3px 0 var(--ink)',
-            }}>
-              {MORE_LINKS.map((l) => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className="nav-link"
-                  style={{ display: 'block', padding: '6px 16px' }}
-                  onClick={() => setMoreOpen(false)}
-                >
-                  {l.label}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
       <div className="right" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

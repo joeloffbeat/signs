@@ -22,11 +22,18 @@ export default function MapPage() {
     async function initMap() {
       const L = (await import('leaflet')).default
 
-      map = L.map(mapRef.current!, { center: [20, 0], zoom: 2, minZoom: 1, maxZoom: 6 })
+      const worldBounds = L.latLngBounds(L.latLng(-85, -180), L.latLng(85, 180))
+      map = L.map(mapRef.current!, {
+        center: [20, 0], zoom: 2, minZoom: 2, maxZoom: 6,
+        maxBounds: worldBounds, maxBoundsViscosity: 1.0,
+        worldCopyJump: false,
+      })
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
         opacity: 0.6,
+        noWrap: true,
+        bounds: worldBounds,
       }).addTo(map)
 
       const data = await fetch('/api/astrocartography').then((r) => r.json())

@@ -14,7 +14,7 @@ export default function HomeContent() {
         <div>
           <div className="eyebrow">a divination tool · est. mmxxv</div>
           <h1>
-            the stars don't <span className="strike">know</span> you.<br/>
+            the stars <span className="strike">don't</span> know you.<br/>
             but the <em>math</em> is fun.
           </h1>
           <p className="lede">

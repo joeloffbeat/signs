@@ -66,7 +66,7 @@ export default function ChartPage() {
                 <label className="field-label">name (or what to call this chart)</label>
                 <input className="input" value={form.name}
                   onChange={e => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g. me · joel · test chart" />
+                  placeholder="e.g. me · alex · test chart" />
               </div>
               <div>
                 <label className="field-label">birth date</label>
@@ -90,7 +90,7 @@ export default function ChartPage() {
               <button className="btn btn-primary btn-lg" onClick={submit} disabled={!form.name || !form.date}>
                 draw the chart →
               </button>
-              <button className="btn btn-ghost" onClick={() => setForm({ name: 'joel', date: '1991-09-12', time: '07:42', place: 'edinburgh, uk' })}>
+              <button className="btn btn-ghost" onClick={() => setForm({ name: 'sample', date: '1990-06-21', time: '12:00', place: 'london, uk' })}>
                 use sample data
               </button>
             </div>
