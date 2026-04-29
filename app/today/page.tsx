@@ -1,10 +1,11 @@
 'use client'
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import TopNav from '@/components/TopNav'
-import SignLoreBox from '@/components/SignLoreBox'
 import { makeChart, makeDailyVibe } from '@/lib/astro-data'
 import type { Chart, DailyVibe } from '@/lib/astro-data'
+import { computeMonthTransits } from '@/lib/transits'
 
 const GENERIC_CHART = makeChart('today', '1970-06-21', '12:00', 'London')
 
@@ -15,7 +16,6 @@ export default function TodayPage() {
   const [usePersonal, setUsePersonal] = useState(false)
 
   useEffect(() => {
-    // load from localStorage
     try {
       const saved = localStorage.getItem('signs-chart')
       if (saved) {
@@ -27,7 +27,6 @@ export default function TodayPage() {
       }
     } catch { /* ignore */ }
 
-    // also try profile if logged in
     if (session) {
       fetch('/api/profile').then(r => r.json()).then(d => {
         if (d?.birth_date && !localStorage.getItem('signs-chart')) {
@@ -64,6 +63,26 @@ export default function TodayPage() {
   const today = new Date()
   const dateLabel = today.toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' }).toLowerCase()
   const isPersonal = usePersonal && personalChart !== null
+
+  // Best days this week (only shown when personal chart available)
+  const bestDays = (() => {
+    if (!isPersonal || !personalChart) return []
+    const yr = today.getFullYear()
+    const mo = today.getMonth() + 1
+    const allDays = computeMonthTransits(personalChart, yr, mo)
+    const todayStr = today.toISOString().slice(0, 10)
+    const weekEnd = new Date(today.getTime() + 7 * 86400000).toISOString().slice(0, 10)
+    return allDays
+      .filter(d => d.date >= todayStr && d.date <= weekEnd && d.aspects.length > 0)
+      .map(d => ({
+        date: d.date,
+        greenCount: d.aspects.filter(a => a.color === 'green').length,
+        redCount: d.aspects.filter(a => a.color === 'red').length,
+        aspects: d.aspects,
+      }))
+      .sort((a, b) => (b.greenCount - b.redCount) - (a.greenCount - a.redCount))
+      .slice(0, 3)
+  })()
 
   return (
     <>
@@ -145,6 +164,41 @@ export default function TodayPage() {
                 <div className="value" style={{ fontSize: 17 }}>{v.watchOut}.</div>
               </div>
             </div>
+
+            {isPersonal && bestDays.length > 0 && (
+              <div style={{ marginTop: 24 }}>
+                <div className="section-divider"><span className="label">best days this week</span></div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, marginTop: 12 }}>
+                  {bestDays.map(day => {
+                    const d = new Date(day.date + 'T12:00:00')
+                    const isToday = day.date === today.toISOString().slice(0, 10)
+                    const label = d.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })
+                    const score = day.greenCount - day.redCount
+                    return (
+                      <div key={day.date} style={{
+                        padding: '12px 14px',
+                        background: score > 0 ? 'rgba(168,192,144,0.15)' : score < 0 ? 'rgba(184,67,31,0.08)' : 'var(--paper-2)',
+                        border: `2px solid ${isToday ? 'var(--ink)' : score > 0 ? 'var(--sage)' : score < 0 ? 'var(--clay)' : 'rgba(15,13,9,0.15)'}`,
+                        borderRadius: 4,
+                      }}>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-muted)', marginBottom: 4 }}>
+                          {isToday ? 'today' : label}
+                        </div>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: score > 0 ? 'var(--sage)' : score < 0 ? 'var(--clay)' : 'var(--ink-muted)' }}>
+                          {score > 0 ? `${day.greenCount} favourable` : score < 0 ? `${day.redCount} challenging` : `${day.aspects.length} aspect${day.aspects.length !== 1 ? 's' : ''}`}
+                        </div>
+                        <div style={{ fontSize: 11, marginTop: 4, color: 'var(--ink-muted)', lineHeight: 1.4 }}>
+                          {day.aspects[0]?.interpretation?.slice(0, 60) ?? ''}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                <div style={{ marginTop: 8, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-muted)' }}>
+                  <Link href="/transits" style={{ color: 'var(--ink-muted)' }}>full month view in transits →</Link>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="today-side">
@@ -183,7 +237,9 @@ export default function TodayPage() {
                     </div>
                   </div>
                 </div>
-                <SignLoreBox signName={chart.sun.name} label="sun" glyph={chart.sun.glyph} inline />
+                <Link href="/lore" style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--honey)', textDecoration: 'none', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'inline-block', marginTop: 10 }}>
+                  mythology + archetype →
+                </Link>
               </div>
             ) : (
               <div className="side-card" style={{ background: 'var(--ink)', color: 'var(--bone)', borderColor: 'var(--ink)' }}>

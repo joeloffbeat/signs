@@ -256,6 +256,95 @@ export function makeDailyVibe(chart: Chart): DailyVibe {
   }
 }
 
+export interface SynastryAspect {
+  p1: PlacedPlanet
+  p2: PlacedPlanet
+  type: string
+  name: string
+  glyph: string
+  orb: string
+  quality: 'harmonious' | 'tense' | 'mixed'
+  interpretation: string
+}
+
+const SYNASTRY_INTERP: Record<string, string> = {
+  'sun-conj-sun': 'Identities fuse — instant recognition but easy to become an echo chamber.',
+  'sun-trine-sun': 'Natural ease and mutual respect. You want similar things from life.',
+  'sun-square-sun': 'Core drives conflict. Growth happens through friction, not despite it.',
+  'sun-opp-sun': 'Opposite signs: you complete what the other lacks. Magnetic, requires negotiation.',
+  'sun-sext-sun': 'Compatible directions with enough difference to stay interesting.',
+  'sun-conj-moon': 'The sun person\'s identity illuminates the moon person\'s emotional world — powerful but unequal.',
+  'sun-trine-moon': 'Emotional warmth flows naturally. One of the best synastry aspects for longevity.',
+  'sun-square-moon': 'Identity needs clash with emotional needs. Requires patience and deliberate care.',
+  'sun-opp-moon': 'Sun-moon opposition: a pull between what each person needs to shine vs. feel safe.',
+  'sun-sext-moon': 'Easy mutual support. Identity and emotion speak the same language.',
+  'moon-conj-moon': 'You feel things the same way. Deep emotional recognition — rare and stabilising.',
+  'moon-trine-moon': 'Emotional rhythms align. Comfort with each other comes quickly and holds.',
+  'moon-square-moon': 'Emotional needs conflict. What soothes one unsettles the other.',
+  'moon-opp-moon': 'Very different emotional languages. Understanding is possible but requires translation.',
+  'moon-sext-moon': 'Good emotional compatibility. You can read each other\'s moods without words.',
+  'venus-conj-venus': 'You share aesthetic sensibility and values. Pleasure is easy between you.',
+  'venus-trine-venus': 'Natural affection and shared taste. Attraction is low-friction and lasting.',
+  'venus-square-venus': 'Different love languages. What one finds romantic the other finds hollow.',
+  'venus-opp-venus': 'Opposing styles of love and desire — fascinating and frustrating in equal measure.',
+  'venus-sext-venus': 'Warmth and appreciation flow easily. You notice what the other does well.',
+  'venus-conj-mars': 'The classic romantic aspect — desire and attraction at close range.',
+  'venus-trine-mars': 'Physical and emotional attraction that doesn\'t burn out quickly.',
+  'venus-square-mars': 'High charge, high friction. Passion is real but so is the potential for conflict.',
+  'venus-opp-mars': 'Intense magnetic pull — the challenge is channelling it constructively.',
+  'venus-sext-mars': 'Attraction with enough ease to stay comfortable. Good for long-term desire.',
+  'mars-conj-mars': 'Matched drive and energy. Can accelerate each other or collide head-on.',
+  'mars-trine-mars': 'Shared approach to action and desire. You move at the same pace.',
+  'mars-square-mars': 'Clashing wills. Productive if channelled into shared goals; exhausting if not.',
+  'mars-opp-mars': 'Opposite strategies for getting what you want. Negotiation is constant.',
+  'mercury-conj-mercury': 'You think alike and finish each other\'s sentences. Risk: a shared blind spot.',
+  'mercury-trine-mercury': 'Communication flows. You understand each other\'s logic without effort.',
+  'mercury-square-mercury': 'Different thinking styles create misunderstandings. Worth working through.',
+  'mercury-opp-mercury': 'Opposite mental approaches — one\'s method baffles the other. Complementary when respected.',
+}
+
+function synastryInterp(p1id: string, aspType: string, p2id: string): string {
+  const k = `${p1id}-${aspType}-${p2id}`
+  const rk = `${p2id}-${aspType}-${p1id}`
+  if (SYNASTRY_INTERP[k]) return SYNASTRY_INTERP[k]
+  if (SYNASTRY_INTERP[rk]) return SYNASTRY_INTERP[rk]
+  const qual = ['trine', 'sext'].includes(aspType) ? 'flows with ease' : ['square', 'opp'].includes(aspType) ? 'creates tension' : 'fuses energy'
+  const n = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+  return `${n(p1id)} ${qual} with their ${p2id}.`
+}
+
+export function makeSynastryAspects(a: Chart, b: Chart): SynastryAspect[] {
+  const aspectTypes = [
+    { name: 'conjunction', angle: 0, orb: 8, type: 'conj', glyph: '☌', quality: 'mixed' as const },
+    { name: 'sextile', angle: 60, orb: 5, type: 'sext', glyph: '✱', quality: 'harmonious' as const },
+    { name: 'square', angle: 90, orb: 6, type: 'square', glyph: '□', quality: 'tense' as const },
+    { name: 'trine', angle: 120, orb: 7, type: 'trine', glyph: '△', quality: 'harmonious' as const },
+    { name: 'opposition', angle: 180, orb: 8, type: 'opp', glyph: '☍', quality: 'tense' as const },
+  ]
+  const personal = ['sun', 'moon', 'mercury', 'venus', 'mars']
+  const results: SynastryAspect[] = []
+  for (const p1 of a.planets.filter((p) => personal.includes(p.id))) {
+    for (const p2 of b.planets.filter((p) => personal.includes(p.id))) {
+      let diff = Math.abs(p1.longitude - p2.longitude)
+      if (diff > 180) diff = 360 - diff
+      for (const asp of aspectTypes) {
+        if (Math.abs(diff - asp.angle) <= asp.orb) {
+          results.push({
+            p1, p2,
+            type: asp.type, name: asp.name, glyph: asp.glyph,
+            orb: Math.abs(diff - asp.angle).toFixed(1),
+            quality: asp.quality,
+            interpretation: synastryInterp(p1.id, asp.type, p2.id),
+          })
+          break
+        }
+      }
+    }
+  }
+  const order = { harmonious: 0, mixed: 1, tense: 2 }
+  return results.sort((x, y) => order[x.quality] - order[y.quality])
+}
+
 export function makeCompat(a: Chart, b: Chart): Compat {
   const seed = `${a.name}|${a.dateStr}|${b.name}|${b.dateStr}`
   const rand = seedRand(seed)

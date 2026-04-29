@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import TopNav from '@/components/TopNav'
-import { makeChart, makeCompat } from '@/lib/astro-data'
-import type { Chart, Compat } from '@/lib/astro-data'
+import { makeChart, makeCompat, makeSynastryAspects } from '@/lib/astro-data'
+import type { Chart, Compat, SynastryAspect } from '@/lib/astro-data'
 
 interface FormState {
   name: string
@@ -131,6 +131,7 @@ export default function CompatPage() {
   }
 
   const compat: Compat = makeCompat(myChart, partner)
+  const synastry: SynastryAspect[] = makeSynastryAspects(myChart, partner)
 
   async function saveCompat() {
     if (!session || !myChart || !partner) return
@@ -222,6 +223,38 @@ export default function CompatPage() {
             {myChart.sun.element} sun meeting {partner.sun.element} sun is {compat.overall >= 70 ? 'easier than most' : compat.overall >= 50 ? 'a study in opposites' : 'a friction worth understanding'}. moons in {myChart.moon.element} and {partner.moon.element} mean your nightly selves {myChart.moon.element === partner.moon.element ? 'speak the same language' : 'translate before they understand'}. the rest is choices.
           </p>
         </div>
+
+        {synastry.length > 0 && (
+          <div style={{ marginTop: 40 }}>
+            <div className="section-divider"><span className="label">synastry aspects</span></div>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--ink-muted)', marginBottom: 20, maxWidth: 560 }}>
+              Cross-chart aspects between personal planets — how {myChart.name.toLowerCase()}'s inner planets interact with {partner.name.toLowerCase()}'s.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {synastry.map((asp, i) => {
+                const bg = asp.quality === 'harmonious' ? 'rgba(168,192,144,0.12)' : asp.quality === 'tense' ? 'rgba(184,67,31,0.08)' : 'rgba(212,160,74,0.10)'
+                const border = asp.quality === 'harmonious' ? 'var(--sage)' : asp.quality === 'tense' ? 'var(--clay)' : '#d4a04a'
+                const badge = asp.quality === 'harmonious' ? { bg: 'rgba(168,192,144,0.25)', color: 'var(--sage)' } : asp.quality === 'tense' ? { bg: 'rgba(184,67,31,0.15)', color: 'var(--clay)' } : { bg: 'rgba(212,160,74,0.2)', color: '#d4a04a' }
+                return (
+                  <div key={i} style={{ padding: '14px 18px', background: bg, border: `1.5px solid ${border}`, borderRadius: 4, display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 16, alignItems: 'center' }}>
+                    <div style={{ fontFamily: 'Roboto Slab', fontWeight: 900, fontSize: 18, whiteSpace: 'nowrap' }}>
+                      {asp.p1.glyph} {asp.glyph} {asp.p2.glyph}
+                    </div>
+                    <div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', marginBottom: 4 }}>
+                        {myChart.name.toLowerCase()}'s {asp.p1.name.toLowerCase()} {asp.name} {partner.name.toLowerCase()}'s {asp.p2.name.toLowerCase()} · {asp.orb}° orb
+                      </div>
+                      <div style={{ fontSize: 13, lineHeight: 1.55 }}>{asp.interpretation}</div>
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 8px', background: badge.bg, color: badge.color, borderRadius: 2, whiteSpace: 'nowrap' }}>
+                      {asp.quality}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </>
   )

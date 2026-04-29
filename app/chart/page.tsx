@@ -6,6 +6,8 @@ import ChartWheel from '@/components/ChartWheel'
 import SignLoreBox from '@/components/SignLoreBox'
 import { makeChart } from '@/lib/astro-data'
 import type { Chart } from '@/lib/astro-data'
+import { getHouseMeaning } from '@/lib/house-meanings'
+import { makeProgressedChart } from '@/lib/progressions'
 
 type Mode = 'input' | 'loading' | 'view'
 
@@ -14,17 +16,67 @@ interface FormState {
   date: string
   time: string
   place: string
+  tz: string
+}
+
+const TZ_OPTIONS = [
+  'UTC-12', 'UTC-11', 'UTC-10', 'UTC-09:30', 'UTC-09', 'UTC-08', 'UTC-07',
+  'UTC-06', 'UTC-05', 'UTC-04', 'UTC-03:30', 'UTC-03', 'UTC-02', 'UTC-01',
+  'UTC+00', 'UTC+01', 'UTC+02', 'UTC+03', 'UTC+03:30', 'UTC+04', 'UTC+04:30',
+  'UTC+05', 'UTC+05:30', 'UTC+05:45', 'UTC+06', 'UTC+06:30', 'UTC+07',
+  'UTC+08', 'UTC+08:45', 'UTC+09', 'UTC+09:30', 'UTC+10', 'UTC+10:30',
+  'UTC+11', 'UTC+12', 'UTC+12:45', 'UTC+13', 'UTC+14',
+]
+
+function HouseCard({ h }: { h: Chart['houses'][0] }) {
+  const [open, setOpen] = useState(false)
+  const meaning = getHouseMeaning(h.num)
+  const ord = h.num === 1 ? 'st' : h.num === 2 ? 'nd' : h.num === 3 ? 'rd' : 'th'
+
+  return (
+    <div style={{ background: 'var(--paper-1)', border: '2px solid var(--ink)', borderRadius: 4, padding: 14, boxShadow: 'var(--shadow-sm)' }}>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--ink-muted)' }}>
+        house {h.num}{ord}
+      </div>
+      <div style={{ fontFamily: 'Roboto Slab', fontWeight: 800, fontSize: 22, marginTop: 6 }}>
+        {h.sign.glyph} {h.sign.name.toLowerCase()}
+      </div>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-muted)', marginTop: 2 }}>{h.cuspDeg}° cusp</div>
+      {meaning && (
+        <>
+          <button
+            onClick={() => setOpen(o => !o)}
+            style={{ marginTop: 10, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: 5 }}
+          >
+            <span style={{ fontSize: 8, display: 'inline-block', transition: 'transform 0.2s', transform: open ? 'rotate(90deg)' : 'none' }}>▶</span>
+            {meaning.name}
+          </button>
+          {open && (
+            <div style={{ marginTop: 10, padding: '14px 16px', background: 'var(--ink)', color: 'var(--bone)', borderRadius: 3 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--honey)', marginBottom: 6 }}>
+                {meaning.keywords.join(' · ')}
+              </div>
+              <p style={{ fontSize: 12, lineHeight: 1.65, margin: '0 0 10px', color: 'var(--paper-2)' }}>{meaning.governs}</p>
+              <p style={{ fontSize: 12, lineHeight: 1.65, margin: 0, color: 'var(--paper-2)', opacity: 0.8 }}>{meaning.deeper}</p>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
 }
 
 export default function ChartPage() {
   const { data: session } = useSession()
   const [mode, setMode] = useState<Mode>('input')
   const [saved, setSaved] = useState(false)
+  const [showProgressed, setShowProgressed] = useState(false)
   const [form, setForm] = useState<FormState>({
     name: '',
     date: '1990-06-15',
     time: '14:30',
     place: '',
+    tz: 'UTC+00',
   })
   const [chart, setChart] = useState<Chart | null>(null)
   const [profile, setProfile] = useState<FormState | null>(null)
@@ -32,7 +84,7 @@ export default function ChartPage() {
   useEffect(() => {
     if (!session) return
     fetch('/api/profile').then(r => r.json()).then(d => {
-      if (d?.birth_date) setProfile({ name: d.name ?? '', date: d.birth_date, time: d.birth_time ?? '12:00', place: d.birth_place ?? '' })
+      if (d?.birth_date) setProfile({ name: d.name ?? '', date: d.birth_date, time: d.birth_time ?? '12:00', place: d.birth_place ?? '', tz: d.birth_tz ?? 'UTC+00' })
     })
   }, [session])
 
@@ -54,7 +106,7 @@ export default function ChartPage() {
     const newChart = makeChart(form.name, form.date, form.time, form.place || 'unknown')
     setChart(newChart)
     if (typeof window !== 'undefined') {
-      localStorage.setItem('signs-chart', JSON.stringify({ name: form.name, date: form.date, time: form.time, place: form.place }))
+      localStorage.setItem('signs-chart', JSON.stringify({ name: form.name, date: form.date, time: form.time, place: form.place, tz: form.tz }))
     }
     setMode('loading')
     setTimeout(() => setMode('view'), 1100)
@@ -90,11 +142,18 @@ export default function ChartPage() {
                   onChange={e => setForm({ ...form, time: e.target.value })} />
                 <div className="field-help">if unknown, pick noon. you'll lose ascendant accuracy.</div>
               </div>
-              <div className="full">
+              <div>
                 <label className="field-label">birth place</label>
                 <input className="input" value={form.place}
                   onChange={e => setForm({ ...form, place: e.target.value })}
                   placeholder="city, country" />
+              </div>
+              <div>
+                <label className="field-label">timezone</label>
+                <select className="input" value={form.tz} onChange={e => setForm({ ...form, tz: e.target.value })}>
+                  {TZ_OPTIONS.map(tz => <option key={tz} value={tz}>{tz}</option>)}
+                </select>
+                <div className="field-help">local time zone at birth location.</div>
               </div>
             </div>
             <div className="btn-row" style={{ marginTop: 28 }}>
@@ -106,7 +165,7 @@ export default function ChartPage() {
                   use my birth data →
                 </button>
               )}
-              <button className="btn btn-ghost" onClick={() => setForm({ name: 'sample', date: '1990-06-21', time: '12:00', place: 'london, uk' })}>
+              <button className="btn btn-ghost" onClick={() => setForm({ name: 'sample', date: '1990-06-21', time: '12:00', place: 'london, uk', tz: 'UTC+01' })}>
                 use sample data
               </button>
             </div>
@@ -134,8 +193,12 @@ export default function ChartPage() {
     )
   }
 
-  // view mode — chart is guaranteed non-null here
   const c = chart!
+
+  const progressedResult = (() => {
+    if (!showProgressed) return null
+    try { return makeProgressedChart(c.name, c.dateStr, c.timeStr, c.place) } catch { return null }
+  })()
 
   return (
     <>
@@ -145,7 +208,7 @@ export default function ChartPage() {
           <div>
             <div className="eyebrow">natal chart</div>
             <h1>{c.name}'s wheel.</h1>
-            <p>{c.dateStr} · {c.timeStr} · {c.place}</p>
+            <p>{c.dateStr} · {c.timeStr} · {c.place}{form.tz !== 'UTC+00' ? ` · ${form.tz}` : ''}</p>
           </div>
           <button className="btn btn-ghost btn-sm" onClick={() => setMode('input')}>edit data</button>
         </div>
@@ -251,16 +314,57 @@ export default function ChartPage() {
         {/* houses */}
         <div className="section-divider"><span className="label">house cusps</span></div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
-          {c.houses.map(h => (
-            <div key={h.num} style={{ background: 'var(--paper-1)', border: '2px solid var(--ink)', borderRadius: 4, padding: 14, boxShadow: 'var(--shadow-sm)' }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--ink-muted)' }}>house {h.num}</div>
-              <div style={{ fontFamily: 'Roboto Slab', fontWeight: 800, fontSize: 22, marginTop: 6 }}>
-                {h.sign.glyph} {h.sign.name.toLowerCase()}
-              </div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-muted)', marginTop: 2 }}>{h.cuspDeg}° cusp</div>
-            </div>
-          ))}
+          {c.houses.map(h => <HouseCard key={h.num} h={h} />)}
         </div>
+
+        {/* progressed chart */}
+        <div className="section-divider">
+          <span className="label">secondary progressions</span>
+          <button
+            onClick={() => setShowProgressed(s => !s)}
+            style={{ marginLeft: 16, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 10px', background: showProgressed ? 'var(--ink)' : 'transparent', color: showProgressed ? 'var(--bone)' : 'var(--ink-muted)', border: '1.5px solid var(--ink)', borderRadius: 2, cursor: 'pointer' }}
+          >
+            {showProgressed ? 'hide' : 'show'}
+          </button>
+        </div>
+
+        {showProgressed && progressedResult && (
+          <div style={{ marginTop: 16 }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--ink-muted)', lineHeight: 1.7, maxWidth: 640, marginBottom: 24 }}>
+              Secondary progressions move the chart forward at a rate of <strong style={{ color: 'var(--ink)' }}>one solar day per year of life</strong>. Your natal planets have progressed to the positions below — reflecting internal development rather than external transits. The progressed Sun changes sign roughly every 30 years; the progressed Moon every 2–2.5 years.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'start' }}>
+              <div>
+                <div className="field-label" style={{ marginBottom: 8 }}>natal · {c.dateStr}</div>
+                <ChartWheel chart={c} size={380} />
+              </div>
+              <div>
+                <div className="field-label" style={{ marginBottom: 8 }}>
+                  progressed · {progressedResult.progressedDate.toISOString().slice(0, 10)}
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, marginLeft: 8, color: 'var(--ink-muted)' }}>
+                    ({Math.floor(progressedResult.ageInYears)} yrs)
+                  </span>
+                </div>
+                <ChartWheel chart={progressedResult.progressedChart} size={380} />
+              </div>
+            </div>
+            <div className="placement-table" style={{ marginTop: 24 }}>
+              <div className="row head"><div>planet</div><div>natal sign</div><div>progressed sign</div><div>shift</div></div>
+              {progressedResult.progressedChart.planets.map((pp, i) => {
+                const natal = c.planets[i]
+                const changed = natal?.sign.name !== pp.sign.name
+                return (
+                  <div className="row" key={pp.id} style={{ background: changed ? 'rgba(168,192,144,0.1)' : undefined }}>
+                    <div className="planet"><span className="glyph">{pp.glyph}</span> {pp.name.toLowerCase()}</div>
+                    <div>{natal?.sign.glyph} {natal?.sign.name.toLowerCase()}</div>
+                    <div style={{ color: changed ? 'var(--sage)' : undefined, fontWeight: changed ? 700 : undefined }}>{pp.sign.glyph} {pp.sign.name.toLowerCase()}</div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: changed ? 'var(--sage)' : 'var(--ink-muted)' }}>{changed ? '↗ sign change' : '—'}</div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </>
   )
