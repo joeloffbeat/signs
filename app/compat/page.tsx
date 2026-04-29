@@ -11,25 +11,25 @@ interface FormState {
   place: string
 }
 
-export default function CompatPage() {
-  // Seed a default "your" chart; in a real flow this would come from localStorage
-  const [myChart] = useState<Chart | null>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('signs-chart')
-      if (saved) {
-        try {
-          const d = JSON.parse(saved)
-          return makeChart(d.name, d.date, d.time, d.place || 'unknown')
-        } catch {
-          return null
-        }
-      }
-    }
-    return null
-  })
+const emptyForm = (): FormState => ({ name: '', date: '1990-06-15', time: '12:00', place: '' })
 
+function savedChart(): FormState | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const d = JSON.parse(localStorage.getItem('signs-chart') ?? '')
+    if (d?.name && d?.date) return d as FormState
+  } catch { /* no saved chart */ }
+  return null
+}
+
+export default function CompatPage() {
+  const prefill = savedChart()
+  const [myForm, setMyForm] = useState<FormState>(prefill ?? emptyForm())
+  const [myChart, setMyChart] = useState<Chart | null>(
+    prefill ? makeChart(prefill.name, prefill.date, prefill.time, prefill.place || 'unknown') : null
+  )
   const [partner, setPartner] = useState<Chart | null>(null)
-  const [form, setForm] = useState<FormState>({ name: '', date: '1992-04-22', time: '09:15', place: '' })
+  const [partnerForm, setPartnerForm] = useState<FormState>(emptyForm())
 
   if (!myChart) {
     return (
@@ -37,9 +37,35 @@ export default function CompatPage() {
         <TopNav />
         <div className="page page-narrow">
           <div className="page-head">
-            <div className="eyebrow">synastry</div>
-            <h1>need your chart first.</h1>
-            <p>compatibility is computed against your natal positions. make a chart and come back.</p>
+            <div className="eyebrow">synastry · person one</div>
+            <h1>start with your chart.</h1>
+            <p>enter your birth details below. no login needed — nothing leaves your browser.</p>
+          </div>
+          <div className="card" style={{ padding: 32, background: 'var(--bone)' }}>
+            <div className="form-grid">
+              <div className="full">
+                <label className="field-label">name</label>
+                <input className="input" value={myForm.name} onChange={e => setMyForm({ ...myForm, name: e.target.value })} placeholder="e.g. me" />
+              </div>
+              <div>
+                <label className="field-label">birth date</label>
+                <input className="input" type="date" value={myForm.date} onChange={e => setMyForm({ ...myForm, date: e.target.value })} />
+              </div>
+              <div>
+                <label className="field-label">birth time</label>
+                <input className="input" type="time" value={myForm.time} onChange={e => setMyForm({ ...myForm, time: e.target.value })} />
+              </div>
+              <div className="full">
+                <label className="field-label">birth place</label>
+                <input className="input" value={myForm.place} onChange={e => setMyForm({ ...myForm, place: e.target.value })} placeholder="city, country" />
+              </div>
+            </div>
+            <div className="btn-row" style={{ marginTop: 28 }}>
+              <button className="btn btn-primary btn-lg" disabled={!myForm.name || !myForm.date}
+                onClick={() => setMyChart(makeChart(myForm.name, myForm.date, myForm.time, myForm.place || 'unknown'))}>
+                next: add them →
+              </button>
+            </div>
           </div>
         </div>
       </>
@@ -52,32 +78,33 @@ export default function CompatPage() {
         <TopNav />
         <div className="page page-narrow">
           <div className="page-head">
-            <div className="eyebrow">synastry · second person</div>
+            <div className="eyebrow">synastry · person two</div>
             <h1>tell me about them.</h1>
-            <p>same fields as your chart. signs computes the synastry — sun pairs, moon pairs, the usual squares and trines, and a single overall number you should not take too seriously.</p>
+            <p>signs computes the synastry — sun pairs, moon pairs, the usual squares and trines, and a single overall number you should not take too seriously.</p>
           </div>
           <div className="card" style={{ padding: 32, background: 'var(--bone)' }}>
             <div className="form-grid">
               <div className="full">
                 <label className="field-label">their name</label>
-                <input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. sam" />
+                <input className="input" value={partnerForm.name} onChange={e => setPartnerForm({ ...partnerForm, name: e.target.value })} placeholder="e.g. sam" />
               </div>
               <div>
                 <label className="field-label">birth date</label>
-                <input className="input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
+                <input className="input" type="date" value={partnerForm.date} onChange={e => setPartnerForm({ ...partnerForm, date: e.target.value })} />
               </div>
               <div>
                 <label className="field-label">birth time</label>
-                <input className="input" type="time" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} />
+                <input className="input" type="time" value={partnerForm.time} onChange={e => setPartnerForm({ ...partnerForm, time: e.target.value })} />
               </div>
               <div className="full">
                 <label className="field-label">birth place</label>
-                <input className="input" value={form.place} onChange={e => setForm({ ...form, place: e.target.value })} placeholder="city, country" />
+                <input className="input" value={partnerForm.place} onChange={e => setPartnerForm({ ...partnerForm, place: e.target.value })} placeholder="city, country" />
               </div>
             </div>
             <div className="btn-row" style={{ marginTop: 28 }}>
-              <button className="btn btn-primary btn-lg" disabled={!form.name}
-                onClick={() => setPartner(makeChart(form.name, form.date, form.time, form.place || 'unknown'))}>
+              <button className="btn btn-ghost btn-sm" onClick={() => setMyChart(null)}>← back</button>
+              <button className="btn btn-primary btn-lg" disabled={!partnerForm.name}
+                onClick={() => setPartner(makeChart(partnerForm.name, partnerForm.date, partnerForm.time, partnerForm.place || 'unknown'))}>
                 run synastry →
               </button>
             </div>

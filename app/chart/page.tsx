@@ -43,7 +43,7 @@ export default function ChartPage() {
     const newChart = makeChart(form.name, form.date, form.time, form.place || 'unknown')
     setChart(newChart)
     if (typeof window !== 'undefined') {
-      localStorage.setItem('signs-chart', JSON.stringify(newChart))
+      localStorage.setItem('signs-chart', JSON.stringify({ name: form.name, date: form.date, time: form.time, place: form.place }))
     }
     setMode('loading')
     setTimeout(() => setMode('view'), 1100)
