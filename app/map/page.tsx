@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import TopNav from '@/components/TopNav'
+import 'leaflet/dist/leaflet.css'
 
 interface Feature {
   type: 'Feature'
@@ -20,7 +21,6 @@ export default function MapPage() {
 
     async function initMap() {
       const L = (await import('leaflet')).default
-      await import('leaflet/dist/leaflet.css')
 
       map = L.map(mapRef.current!, { center: [20, 0], zoom: 2, minZoom: 1, maxZoom: 6 })
 

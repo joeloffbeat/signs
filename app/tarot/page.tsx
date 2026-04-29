@@ -125,7 +125,7 @@ export default function TarotPage() {
                       <div className="face">
                         <div className="face-frame">
                           <div className="face-num">
-                            <span>{c.num}</span>
+                            <span>{c.id}</span>
                             <span>{c.isReversed ? '℞' : '·'}</span>
                           </div>
                           <div className="face-art">
