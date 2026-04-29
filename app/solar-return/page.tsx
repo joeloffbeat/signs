@@ -14,18 +14,22 @@ export default function SolarReturnPage() {
   useEffect(() => {
     const saved = localStorage.getItem('signs-chart')
     if (!saved) return
-    const chart: Chart = JSON.parse(saved)
-    setNatalChart(chart)
+    try {
+      const d = JSON.parse(saved)
+      if (!d?.name || !d?.date) return
+      const chart = makeChart(d.name, d.date, d.time ?? '12:00', d.place ?? 'unknown')
+      setNatalChart(chart)
 
-    const natalSunLon = chart.planets.find((p) => p.id === 'sun')?.longitude ?? 0
-    const birthYear = parseInt(chart.dateStr.slice(0, 4))
-    const currentYear = new Date().getFullYear()
-    const result = computeSolarReturn(natalSunLon, birthYear, currentYear)
-    setSrResult(result)
+      const natalSunLon = chart.planets.find((p) => p.id === 'sun')?.longitude ?? 0
+      const birthYear = new Date(d.date).getFullYear()
+      const currentYear = new Date().getFullYear()
+      const result = computeSolarReturn(natalSunLon, birthYear, currentYear)
+      setSrResult(result)
 
-    const dateStr = result.returnDate.toISOString().slice(0, 10)
-    const timeStr = result.returnDate.toTimeString().slice(0, 5)
-    setSrChart(makeChart(chart.name + ' SR', dateStr, timeStr, chart.place))
+      const dateStr = result.returnDate.toISOString().slice(0, 10)
+      const timeStr = result.returnDate.toTimeString().slice(0, 5)
+      setSrChart(makeChart(d.name + ' SR', dateStr, timeStr, d.place ?? 'unknown'))
+    } catch { /* malformed localStorage */ }
   }, [])
 
   if (!natalChart) {

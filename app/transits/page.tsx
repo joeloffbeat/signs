@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import TopNav from '@/components/TopNav'
-import { type Chart } from '@/lib/astro-data'
+import { makeChart, type Chart } from '@/lib/astro-data'
 import { computeMonthTransits, type TransitDay } from '@/lib/transits'
 
 const COLOR_STYLES: Record<string, React.CSSProperties> = {
@@ -22,7 +22,11 @@ export default function TransitsPage() {
 
   useEffect(() => {
     const saved = localStorage.getItem('signs-chart')
-    if (saved) setChart(JSON.parse(saved))
+    if (!saved) return
+    try {
+      const d = JSON.parse(saved)
+      if (d?.name && d?.date) setChart(makeChart(d.name, d.date, d.time ?? '12:00', d.place ?? 'unknown'))
+    } catch { /* malformed */ }
   }, [])
 
   useEffect(() => {
