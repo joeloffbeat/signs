@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import TopNav from '@/components/TopNav'
+import SignLoreBox from '@/components/SignLoreBox'
 import { makeChart, makeDailyVibe } from '@/lib/astro-data'
 import type { Chart, DailyVibe } from '@/lib/astro-data'
 
@@ -129,6 +130,7 @@ export default function TodayPage() {
                     </div>
                   </div>
                 </div>
+                <SignLoreBox signName={chart.sun.name} label="sun" glyph={chart.sun.glyph} inline />
               </div>
             ) : (
               <div className="side-card" style={{ background: 'var(--ink)', color: 'var(--bone)', borderColor: 'var(--ink)' }}>
