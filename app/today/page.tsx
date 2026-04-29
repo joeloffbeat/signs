@@ -168,27 +168,32 @@ export default function TodayPage() {
             {isPersonal && bestDays.length > 0 && (
               <div style={{ marginTop: 24 }}>
                 <div className="section-divider"><span className="label">best days this week</span></div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, marginTop: 12 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
                   {bestDays.map(day => {
                     const d = new Date(day.date + 'T12:00:00')
                     const isToday = day.date === today.toISOString().slice(0, 10)
-                    const label = d.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })
+                    const label = d.toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' })
                     const score = day.greenCount - day.redCount
                     return (
                       <div key={day.date} style={{
-                        padding: '12px 14px',
-                        background: score > 0 ? 'rgba(168,192,144,0.15)' : score < 0 ? 'rgba(184,67,31,0.08)' : 'var(--paper-2)',
+                        padding: '14px 16px',
+                        background: score > 0 ? 'rgba(168,192,144,0.12)' : score < 0 ? 'rgba(184,67,31,0.07)' : 'var(--paper-2)',
                         border: `2px solid ${isToday ? 'var(--ink)' : score > 0 ? 'var(--sage)' : score < 0 ? 'var(--clay)' : 'rgba(15,13,9,0.15)'}`,
                         borderRadius: 4,
+                        display: 'grid', gridTemplateColumns: '1fr auto', gap: '4px 16px', alignItems: 'start',
                       }}>
-                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-muted)', marginBottom: 4 }}>
-                          {isToday ? 'today' : label}
+                        <div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-muted)', marginBottom: 4 }}>
+                            {isToday ? 'today · ' : ''}{label}
+                          </div>
+                          {day.aspects[0]?.interpretation && (
+                            <div style={{ fontSize: 12, lineHeight: 1.55, color: 'var(--ink-soft)' }}>
+                              {day.aspects[0].interpretation}
+                            </div>
+                          )}
                         </div>
-                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: score > 0 ? 'var(--sage)' : score < 0 ? 'var(--clay)' : 'var(--ink-muted)' }}>
-                          {score > 0 ? `${day.greenCount} favourable` : score < 0 ? `${day.redCount} challenging` : `${day.aspects.length} aspect${day.aspects.length !== 1 ? 's' : ''}`}
-                        </div>
-                        <div style={{ fontSize: 11, marginTop: 4, color: 'var(--ink-muted)', lineHeight: 1.4 }}>
-                          {day.aspects[0]?.interpretation?.slice(0, 60) ?? ''}
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: score > 0 ? 'var(--sage)' : score < 0 ? 'var(--clay)' : 'var(--ink-muted)', whiteSpace: 'nowrap', paddingTop: 2 }}>
+                          {score > 0 ? `${day.greenCount} ✓` : score < 0 ? `${day.redCount} ✗` : `${day.aspects.length} asp`}
                         </div>
                       </div>
                     )

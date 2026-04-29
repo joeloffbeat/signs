@@ -125,9 +125,8 @@ export default function HomeContent() {
           <span>built warm · 2025</span>
         </div>
         <div className="col" style={{ alignItems: 'flex-end' }}>
-          <a href="#">about</a>
-          <a href="#">methods</a>
-          <a href="#">rss</a>
+          <a href="/lore">lore</a>
+          <a href="/chart">birth chart</a>
         </div>
       </div>
     </div>
