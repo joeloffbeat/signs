@@ -6,15 +6,42 @@ import SignLoreBox from '@/components/SignLoreBox'
 import { makeChart, makeDailyVibe } from '@/lib/astro-data'
 import type { Chart, DailyVibe } from '@/lib/astro-data'
 
+const GENERIC_CHART = makeChart('today', '1970-06-21', '12:00', 'London')
+
 export default function TodayPage() {
   const { data: session } = useSession()
   const [loading, setLoading] = useState(true)
-  const [chart] = useState<Chart>(() => makeChart('visitor', '1990-01-01', '12:00', 'New York'))
+  const [personalChart, setPersonalChart] = useState<Chart | null>(null)
+  const [usePersonal, setUsePersonal] = useState(false)
 
   useEffect(() => {
+    // load from localStorage
+    try {
+      const saved = localStorage.getItem('signs-chart')
+      if (saved) {
+        const d = JSON.parse(saved)
+        if (d?.name && d?.date) {
+          setPersonalChart(makeChart(d.name, d.date, d.time ?? '12:00', d.place ?? 'unknown'))
+          setUsePersonal(true)
+        }
+      }
+    } catch { /* ignore */ }
+
+    // also try profile if logged in
+    if (session) {
+      fetch('/api/profile').then(r => r.json()).then(d => {
+        if (d?.birth_date && !localStorage.getItem('signs-chart')) {
+          setPersonalChart(makeChart(d.name ?? 'me', d.birth_date, d.birth_time ?? '12:00', d.birth_place ?? 'unknown'))
+          setUsePersonal(true)
+        }
+      })
+    }
+
     const t = setTimeout(() => setLoading(false), 1400)
     return () => clearTimeout(t)
-  }, [])
+  }, [session])
+
+  const chart = (usePersonal && personalChart) ? personalChart : GENERIC_CHART
 
   if (loading) {
     return (
@@ -36,6 +63,7 @@ export default function TodayPage() {
   const v: DailyVibe = makeDailyVibe(chart)
   const today = new Date()
   const dateLabel = today.toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' }).toLowerCase()
+  const isPersonal = usePersonal && personalChart !== null
 
   return (
     <>
@@ -44,7 +72,32 @@ export default function TodayPage() {
         <div className="page-head">
           <div className="eyebrow">today's read</div>
           <h1>{dateLabel}.</h1>
-          <p>your daily vibe, calculated from today's transits and planetary positions. one paragraph, two numbers, no horoscope filler.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginTop: 8 }}>
+            <p style={{ margin: 0 }}>
+              {isPersonal
+                ? `personalised to ${chart.name.toLowerCase()}'s natal positions and today's transits.`
+                : "calculated from today's transits and planetary positions."}
+            </p>
+            {personalChart && (
+              <button
+                onClick={() => setUsePersonal(u => !u)}
+                style={{
+                  fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em',
+                  textTransform: 'uppercase', padding: '4px 10px', cursor: 'pointer',
+                  background: isPersonal ? 'var(--ink)' : 'var(--paper-2)',
+                  color: isPersonal ? 'var(--bone)' : 'var(--ink-muted)',
+                  border: '1.5px solid var(--ink)', borderRadius: 2, whiteSpace: 'nowrap',
+                }}
+              >
+                {isPersonal ? `✓ ${chart.name.toLowerCase()}` : 'use my chart'}
+              </button>
+            )}
+            {!personalChart && (
+              <a href="/chart" style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-muted)', textDecoration: 'underline' }}>
+                add your birth data →
+              </a>
+            )}
+          </div>
         </div>
 
         <div className="today-grid">
@@ -118,7 +171,7 @@ export default function TodayPage() {
               ))}
             </div>
 
-            {session ? (
+            {isPersonal ? (
               <div className="side-card" style={{ background: 'var(--ink)', color: 'var(--bone)', borderColor: 'var(--ink)' }}>
                 <h4 style={{ color: 'var(--bone)' }}>your sun</h4>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -136,10 +189,10 @@ export default function TodayPage() {
               <div className="side-card" style={{ background: 'var(--ink)', color: 'var(--bone)', borderColor: 'var(--ink)' }}>
                 <h4 style={{ color: 'var(--bone)' }}>your natal chart</h4>
                 <p style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--paper-2)', marginBottom: 12 }}>
-                  sign in to see your sun, moon, and rising personalised to your birth data.
+                  {session ? 'add birth data to your profile to personalise this page.' : 'sign in or make a birth chart to personalise this read.'}
                 </p>
-                <a href="/login" style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--honey)', textDecoration: 'none' }}>
-                  sign in →
+                <a href={session ? '/profile' : '/chart'} style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--honey)', textDecoration: 'none' }}>
+                  {session ? 'edit profile →' : 'make a chart →'}
                 </a>
               </div>
             )}
