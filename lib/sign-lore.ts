@@ -157,3 +157,7 @@ const LORE_MAP = Object.fromEntries(LORE.map(l => [l.sign.toLowerCase(), l]))
 export function getSignLore(signName: string): SignLore | null {
   return LORE_MAP[signName.toLowerCase()] ?? null
 }
+
+export function getAllSignLore(): SignLore[] {
+  return LORE
+}

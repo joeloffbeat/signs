@@ -14,6 +14,7 @@ const PRIMARY_LINKS = [
   { href: '/numerology', label: 'numerology' },
   { href: '/solar-return', label: 'solar return' },
   { href: '/map', label: 'map' },
+  { href: '/lore', label: 'lore' },
 ]
 
 interface TopNavProps {
