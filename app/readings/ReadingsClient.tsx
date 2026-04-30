@@ -19,7 +19,7 @@ interface Props {
 const POSITIONS = ['past', 'present', 'future']
 
 function TarotDetail({ data }: { data: Record<string, unknown> }) {
-  const cards = (data.cards as Array<{ id: string; name: string; reversed: boolean }>) ?? []
+  const cards = (data.cards as Array<{ id: number; name: string; reversed: boolean }>) ?? []
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 16 }}>
       {cards.map((c, i) => {
