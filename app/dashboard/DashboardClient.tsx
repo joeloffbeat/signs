@@ -29,13 +29,12 @@ const PHASE_INTERPRETATIONS: Record<string, string> = {
   'Waning Crescent': 'Surrender and rest. The cycle closes. Sleep, restore, and prepare to begin again.',
 }
 
-const CHALDEAN_HISTORY = `The Chaldean order — Saturn, Jupiter, Mars, Sun, Venus, Mercury, Moon — is among the oldest known astrological systems, traced to Babylonian astronomers around 700 BCE. Each planet rules an hour of the day, cycling continuously from the sunrise of each day. Sunday takes its name from its first-hour ruler, the Sun; Monday from the Moon; Saturday from Saturn. The system was adopted by Hellenistic astrologers, passed into medieval European magic, and is still used today for timing decisions, prayers, and practical matters.`
+const CHALDEAN_HISTORY = `The Chaldean order — Saturn, Jupiter, Mars, Sun, Venus, Mercury, Moon — is among the oldest known astrological systems, traced to Babylonian astronomers around 700 BCE. Each planet rules an hour of the day, cycling continuously from sunrise. Sunday takes its name from its first-hour ruler, the Sun; Monday from the Moon; Saturday from Saturn.`
 
 export default function DashboardClient({ moonDegrees, moonPhaseName, moonIllumination }: Props) {
   const [hours, setHours] = useState<PlanetaryHour[]>([])
   const [currentIdx, setCurrentIdx] = useState(-1)
   const [countdown, setCountdown] = useState('')
-  const [historyOpen, setHistoryOpen] = useState(false)
   const [locationStatus, setLocationStatus] = useState<'loading' | 'ok' | 'fallback'>('loading')
 
   useEffect(() => {
@@ -77,93 +76,93 @@ export default function DashboardClient({ moonDegrees, moonPhaseName, moonIllumi
   const currentHour = hours[currentIdx]
 
   return (
-    <div className="page">
+    <div className="page" style={{ maxWidth: 680, margin: '0 auto', padding: '40px 24px' }}>
       {locationStatus === 'fallback' && (
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--clay)', marginBottom: 16 }}>
-          using UTC — allow location for local hours
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--clay)', marginBottom: 16, letterSpacing: '0.08em' }}>
+          using UTC · allow location for local planetary hours
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, marginTop: 24 }}>
-        <div className="card" style={{ padding: 32 }}>
-          <div className="field-label" style={{ marginBottom: 16 }}>moon phase</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-            <MoonSvg degrees={moonDegrees} size={120} />
+      <div className="eyebrow">dashboard</div>
+
+      {/* Moon hero */}
+      <div style={{ textAlign: 'center', padding: '36px 0 40px' }}>
+        <MoonSvg degrees={moonDegrees} size={150} />
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 52, marginTop: 28, marginBottom: 6, lineHeight: 1 }}>
+          {moonPhaseName.toLowerCase()}.
+        </h1>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, opacity: 0.45, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 24 }}>
+          {moonIllumination}% illuminated
+        </div>
+        <p style={{ maxWidth: 480, margin: '0 auto', fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 500, lineHeight: 1.65, color: 'var(--ink-soft)', fontStyle: 'italic' }}>
+          {PHASE_INTERPRETATIONS[moonPhaseName] ?? ''}
+        </p>
+      </div>
+
+      {/* Planetary hours */}
+      <div style={{ borderTop: '2px solid var(--ink)', paddingTop: 32 }}>
+        <div className="eyebrow" style={{ marginBottom: 20 }}>planetary hours</div>
+
+        {currentHour ? (
+          <div style={{
+            padding: '22px 28px', background: 'var(--ink)', color: 'var(--bone)',
+            borderRadius: 4, marginBottom: 16,
+            display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 20, alignItems: 'center',
+          }}>
+            <span style={{ fontFamily: 'Roboto Slab', fontWeight: 900, fontSize: 52, lineHeight: 1 }}>
+              {currentHour.glyph}
+            </span>
             <div>
-              <h2 style={{ fontFamily: 'var(--font-display)', margin: 0 }}>{moonPhaseName}</h2>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 14, marginTop: 8, opacity: 0.7 }}>
-                {moonIllumination}% illuminated
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20 }}>{currentHour.planet}</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--paper-3)', marginTop: 4, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                {currentHour.isDaytime ? 'day hour' : 'night hour'}
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-faint)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>ends in</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, color: 'var(--sage)', marginTop: 4 }}>
+                {countdown || '—'}
               </div>
             </div>
           </div>
-          <p style={{ marginTop: 24, lineHeight: 1.6 }}>
-            {PHASE_INTERPRETATIONS[moonPhaseName] ?? ''}
-          </p>
-        </div>
+        ) : (
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, opacity: 0.4, marginBottom: 16 }}>loading hours...</div>
+        )}
 
-        <div className="card" style={{ padding: 32 }}>
-          <div className="field-label" style={{ marginBottom: 16 }}>planetary hours</div>
-
-          {currentHour ? (
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-                <span style={{ fontSize: 40 }}>{currentHour.glyph}</span>
-                <div>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 20 }}>{currentHour.planet}</div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, opacity: 0.6 }}>
-                    {currentHour.isDaytime ? 'day hour' : 'night hour'} · ends in {countdown}
-                  </div>
-                </div>
+        {hours.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {hours.map((h) => (
+              <div
+                key={h.index}
+                style={{
+                  display: 'grid', gridTemplateColumns: '24px 1fr auto 20px',
+                  gap: 12, alignItems: 'center',
+                  padding: '7px 12px',
+                  background: h.isCurrent ? 'rgba(168,192,144,0.18)' : 'transparent',
+                  border: `1.5px solid ${h.isCurrent ? 'var(--sage)' : 'transparent'}`,
+                  borderRadius: 3,
+                }}
+              >
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, opacity: 0.35, textAlign: 'right' }}>
+                  {h.index + 1}
+                </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: h.isCurrent ? 'var(--ink)' : 'var(--ink-soft)' }}>
+                  {h.glyph} {h.planet}
+                </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, opacity: 0.5 }}>
+                  {new Date(h.startTime).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, opacity: 0.35, textAlign: 'center' }}>
+                  {h.isDaytime ? '☀' : '☾'}
+                </span>
               </div>
-            </div>
-          ) : (
-            <div style={{ opacity: 0.5, marginBottom: 24 }}>loading...</div>
-          )}
-
-          <div style={{ maxHeight: 280, overflowY: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--ink)' }}>
-                  <th style={{ textAlign: 'left', padding: '4px 8px', opacity: 0.5 }}>#</th>
-                  <th style={{ textAlign: 'left', padding: '4px 8px', opacity: 0.5 }}>planet</th>
-                  <th style={{ textAlign: 'left', padding: '4px 8px', opacity: 0.5 }}>starts</th>
-                  <th style={{ textAlign: 'left', padding: '4px 8px', opacity: 0.5 }}>type</th>
-                </tr>
-              </thead>
-              <tbody>
-                {hours.map((h) => (
-                  <tr
-                    key={h.index}
-                    style={{
-                      background: h.isCurrent ? 'var(--sage)' : 'transparent',
-                      borderBottom: '1px solid rgba(15,13,9,0.1)',
-                    }}
-                  >
-                    <td style={{ padding: '4px 8px', opacity: 0.5 }}>{h.index + 1}</td>
-                    <td style={{ padding: '4px 8px' }}>{h.glyph} {h.planet}</td>
-                    <td style={{ padding: '4px 8px', opacity: 0.7 }}>
-                      {new Date(h.startTime).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })}
-                    </td>
-                    <td style={{ padding: '4px 8px', opacity: 0.5 }}>{h.isDaytime ? '☀' : '☾'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            ))}
           </div>
+        )}
 
-          <button
-            className="btn btn-ghost"
-            style={{ marginTop: 16, fontSize: 12 }}
-            onClick={() => setHistoryOpen((o) => !o)}
-          >
-            {historyOpen ? 'hide' : 'what does this mean?'}
-          </button>
-          {historyOpen && (
-            <p style={{ marginTop: 12, fontSize: 13, lineHeight: 1.7, opacity: 0.75 }}>
-              {CHALDEAN_HISTORY}
-            </p>
-          )}
-        </div>
+        <p style={{ marginTop: 28, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-faint)', lineHeight: 1.8, borderTop: '1px solid rgba(15,13,9,0.1)', paddingTop: 20 }}>
+          {CHALDEAN_HISTORY}
+        </p>
       </div>
     </div>
   )

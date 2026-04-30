@@ -15,10 +15,13 @@ export default function TarotPage() {
   const [flipped, setFlipped] = useState([false, false, false])
   const [question, setQuestion] = useState('')
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   async function saveReading() {
     if (!session) return
-    await fetch('/api/readings', {
+    setSaveError(false)
+    const res = await fetch('/api/readings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -26,7 +29,22 @@ export default function TarotPage() {
         data: { cards: drawn.map((c) => ({ id: c.id, name: c.name, reversed: c.isReversed })) },
       }),
     })
-    setSaved(true)
+    if (res.ok) setSaved(true)
+    else setSaveError(true)
+  }
+
+  async function shareReading() {
+    const cards = drawn.map((c, i) => `${positions[i]}: ${c.name}${c.isReversed ? ' (reversed)' : ''}`).join(' · ')
+    const text = question
+      ? `my reading for "${question}"\n\n${cards}`
+      : `my tarot reading\n\n${cards}`
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try { await navigator.share({ title: 'Signs — Tarot Reading', text }) } catch { /* cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
   }
 
   const beginShuffle = () => {
@@ -171,17 +189,18 @@ export default function TarotPage() {
 
                 <div className="btn-row" style={{ marginTop: 24, justifyContent: 'center' }}>
                   <button className="btn btn-ghost" onClick={reset}>shuffle again</button>
+                  <button className="btn btn-secondary" onClick={shareReading}>
+                    {copied ? 'copied! ✓' : 'share'}
+                  </button>
                   {session && drawn.length === 3 && (
                     <button
-                      className={`btn ${saved ? 'btn-ghost' : 'btn-primary'}`}
+                      className={`btn ${saved ? 'btn-ghost' : saveError ? 'btn-ghost' : 'btn-primary'}`}
                       onClick={saveReading}
                       disabled={saved}
-                      style={{ marginTop: 24 }}
                     >
-                      {saved ? 'saved ✓' : 'save this reading →'}
+                      {saved ? 'saved ✓' : saveError ? 'save failed — retry' : 'save this reading →'}
                     </button>
                   )}
-                  <button className="btn btn-secondary">share</button>
                 </div>
               </>
             )}

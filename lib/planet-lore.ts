@@ -61,7 +61,7 @@ const PLANETS: PlanetLore[] = [
   {
     id: 'venus',
     name: 'Venus',
-    glyph: '♀',
+    glyph: '♀︎',
     keywords: ['love', 'beauty', 'pleasure', 'value', 'harmony'],
     rules: 'Taurus, Libra',
     archetype: 'What you are willing to be seen wanting. The aesthetic self that knows what is worth the cost.',
@@ -77,7 +77,7 @@ const PLANETS: PlanetLore[] = [
   {
     id: 'mars',
     name: 'Mars',
-    glyph: '♂',
+    glyph: '♂︎',
     keywords: ['drive', 'courage', 'desire', 'conflict', 'action'],
     rules: 'Aries, Scorpio',
     archetype: 'The part of you that moves toward what it wants without apology. Anger as information. Will as a physical force.',

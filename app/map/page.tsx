@@ -29,11 +29,21 @@ export default function MapPage() {
         worldCopyJump: false,
       })
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        opacity: 0.6,
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+        attribution: '©<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> ©<a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        opacity: 0.85,
         noWrap: true,
         bounds: worldBounds,
+      }).addTo(map)
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+        attribution: '',
+        subdomains: 'abcd',
+        opacity: 0.35,
+        noWrap: true,
+        bounds: worldBounds,
+        pane: 'shadowPane',
       }).addTo(map)
 
       const data = await fetch('/api/astrocartography').then((r) => r.json())
@@ -77,25 +87,31 @@ export default function MapPage() {
     <>
       <TopNav />
       <div style={{ position: 'relative', height: 'calc(100vh - 60px)' }}>
-        <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
+        <style>{`.leaflet-tile-pane { filter: sepia(0.3) brightness(0.93) saturate(0.6); }`}</style>
+        <div ref={mapRef} style={{ width: '100%', height: '100%', background: '#ede5cf' }} />
 
         <div style={{
           position: 'absolute', bottom: 24, left: 24, zIndex: 1000,
-          background: 'var(--bg-paper)', border: '2px solid var(--ink)',
-          padding: '16px 20px', maxWidth: 260, boxShadow: '3px 3px 0 var(--ink)',
+          background: 'var(--paper-1)', border: '2px solid var(--ink)',
+          padding: '18px 20px', maxWidth: 220, boxShadow: '4px 4px 0 var(--ink)',
+          borderRadius: 2,
         }}>
-          <div className="field-label" style={{ marginBottom: 10 }}>planetary lines</div>
-          {planets.map((p) => (
-            <div key={p} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <div style={{ width: 24, height: 3, background: PLANET_COLORS[p] ?? '#7d5a2e', borderRadius: 2 }} />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{p}</span>
-            </div>
-          ))}
-          <div style={{ borderTop: '1px solid rgba(15,13,9,0.2)', marginTop: 10, paddingTop: 10 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--ink-muted)', marginBottom: 12 }}>
+            planetary lines
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {planets.map((p) => (
+              <div key={p} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 20, height: 2.5, background: PLANET_COLORS[p] ?? '#7d5a2e', borderRadius: 1, flexShrink: 0 }} />
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-soft)' }}>{p}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ borderTop: '1px solid rgba(15,13,9,0.15)', marginTop: 12, paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
             {lineTypes.map((lt) => (
-              <div key={lt.type} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                <div style={{ width: 24, height: 2, background: 'var(--ink)', borderTop: lt.dash ? '2px dashed var(--ink)' : '2px solid var(--ink)' }} />
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{lt.type} — {lt.label}</span>
+              <div key={lt.type} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 20, height: 0, borderTop: `2px ${lt.dash ? 'dashed' : 'solid'} var(--ink-muted)`, flexShrink: 0 }} />
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-muted)' }}>{lt.type} · {lt.label}</span>
               </div>
             ))}
           </div>
@@ -112,11 +128,13 @@ export default function MapPage() {
 
         {tooltip && (
           <div style={{
-            position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)',
-            zIndex: 1000, background: 'var(--bg-paper)', border: '2px solid var(--ink)',
-            padding: '10px 16px', maxWidth: 400, textAlign: 'center',
-            fontFamily: 'var(--font-mono)', fontSize: 13,
-            boxShadow: '3px 3px 0 var(--ink)',
+            position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)',
+            zIndex: 1000, background: 'var(--ink)', color: 'var(--bone)',
+            border: '2px solid var(--ink)',
+            padding: '10px 18px', maxWidth: 480, textAlign: 'center',
+            fontFamily: 'var(--font-mono)', fontSize: 12, lineHeight: 1.55,
+            boxShadow: '4px 4px 0 var(--walnut)', borderRadius: 2,
+            pointerEvents: 'none',
           }}>
             {tooltip}
           </div>

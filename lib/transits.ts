@@ -99,3 +99,50 @@ export function computeMonthTransits(natalChart: Chart, year: number, month: num
 
   return result
 }
+
+export function computeMonthSkyEnergy(year: number, month: number): TransitDay[] {
+  const daysInMonth = new Date(year, month, 0).getDate()
+  const result: TransitDay[] = []
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(year, month - 1, day, 12, 0, 0)
+    const aspects: DayAspect[] = []
+
+    const positions: Array<{ body: typeof TRANSIT_BODIES[0]; lon: number }> = []
+    for (const body of TRANSIT_BODIES) {
+      try {
+        const vec = Astronomy.GeoVector(body.body, date, true)
+        const ecl = Astronomy.Ecliptic(vec)
+        positions.push({ body, lon: ((ecl.elon % 360) + 360) % 360 })
+      } catch { /* skip */ }
+    }
+
+    for (let i = 0; i < positions.length; i++) {
+      for (let j = i + 1; j < positions.length; j++) {
+        const p1 = positions[i]
+        const p2 = positions[j]
+        const aspect = isAspect(p1.lon, p2.lon, 3)
+        if (!aspect) continue
+        const orb = Math.abs(aspectAngle(p1.lon, p2.lon) - ASPECT_ANGLES.find((a) => a.name === aspect)!.angle)
+        const interp = ASPECT_INTERPRETATIONS[aspect]
+        aspects.push({
+          transitPlanet: p1.body.name,
+          transitGlyph: p1.body.glyph,
+          natalPlanet: p2.body.name,
+          natalGlyph: p2.body.glyph,
+          aspectName: aspect,
+          orb: parseFloat(orb.toFixed(1)),
+          color: interp.color as 'green' | 'amber' | 'red',
+          interpretation: `${p1.body.name} ${aspect} ${p2.body.name} — ${interp.text}`,
+        })
+      }
+    }
+
+    result.push({
+      date: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+      aspects,
+    })
+  }
+
+  return result
+}
