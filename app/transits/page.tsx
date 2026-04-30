@@ -134,22 +134,46 @@ export default function TransitsPage() {
               const isToday = day.date === today.toISOString().slice(0, 10)
               const isSelected = day.date === selectedDay
               const hasAspects = day.aspects.length > 0
-              const hasHard = day.aspects.some((a) => a.color === 'red')
-              const hasSoft = !hasHard && day.aspects.some((a) => a.color === 'green')
+              const greenCount = day.aspects.filter(a => a.color === 'green').length
+              const redCount = day.aspects.filter(a => a.color === 'red').length
+              const score = greenCount - redCount
+              const isFav = score > 0
+              const isChallenging = score < 0
+              const isNeutral = hasAspects && score === 0
+              const bg = isSelected ? 'var(--walnut)'
+                : isFav ? 'rgba(168,192,144,0.38)'
+                : isChallenging ? 'rgba(184,67,31,0.22)'
+                : isNeutral ? 'rgba(212,160,74,0.22)'
+                : 'transparent'
+              const borderCol = isSelected ? 'var(--walnut)'
+                : isToday ? 'var(--ink)'
+                : isFav ? 'rgba(107,133,80,0.7)'
+                : isChallenging ? 'rgba(184,67,31,0.6)'
+                : isNeutral ? 'rgba(212,160,74,0.6)'
+                : 'rgba(15,13,9,0.12)'
               return (
                 <button
                   key={day.date}
-                  onClick={() => setSelectedDay(isSelected ? null : day.date)}
+                  onClick={() => hasAspects && setSelectedDay(isSelected ? null : day.date)}
                   style={{
-                    padding: '8px 4px', border: `2px solid ${isSelected ? 'var(--walnut)' : isToday ? 'var(--ink)' : 'rgba(15,13,9,0.15)'}`,
-                    background: isSelected ? 'var(--walnut)' : hasHard ? 'rgba(184,67,31,0.1)' : hasSoft ? 'rgba(168,192,144,0.2)' : 'transparent',
+                    padding: '8px 4px 6px', border: `2px solid ${borderCol}`,
+                    background: bg,
                     cursor: hasAspects ? 'pointer' : 'default',
-                    fontFamily: 'var(--font-mono)', fontSize: 13, color: isSelected ? 'var(--bone)' : 'var(--ink)',
+                    fontFamily: 'var(--font-mono)', fontSize: 13,
+                    color: isSelected ? 'var(--bone)' : 'var(--ink)',
                     borderRadius: 2, textAlign: 'center',
                   }}
                 >
                   {d}
-                  {hasAspects && <div style={{ fontSize: 8, marginTop: 2, opacity: 0.7 }}>{'·'.repeat(Math.min(day.aspects.length, 5))}</div>}
+                  {hasAspects && (
+                    <div style={{
+                      height: 3, borderRadius: 1, marginTop: 4,
+                      background: isSelected ? 'rgba(245,240,232,0.5)'
+                        : isFav ? 'var(--sage-deep)'
+                        : isChallenging ? 'var(--clay)'
+                        : 'var(--honey)',
+                    }} />
+                  )}
                 </button>
               )
             })}
